@@ -22,23 +22,68 @@ package es.dagaren.gladiator.representation;
  */
 public enum Piece
 {
-   WHITE_PAWN(0),
-   BLACK_PAWN(1),
-   WHITE_ROOK(2),
-   BLACK_ROOK(3),
-   WHITE_KNIGHT(4),
-   BLACK_KNIGHT(5),
-   WHITE_BISHOP(6),
-   BLACK_BISHOP(7),
-   WHITE_QUEEN(8),
-   BLACK_QUEEN(9),
-   WHITE_KING(10),
-   BLACK_KING(11);
+   WHITE_PAWN(0, GenericPiece.PAWN, Colour.WHITE),
+   BLACK_PAWN(1, GenericPiece.PAWN, Colour.BLACK),
+   WHITE_ROOK(2, GenericPiece.ROOK, Colour.WHITE),
+   BLACK_ROOK(3, GenericPiece.ROOK, Colour.BLACK),
+   WHITE_KNIGHT(4, GenericPiece.KNIGHT, Colour.WHITE),
+   BLACK_KNIGHT(5, GenericPiece.KNIGHT, Colour.BLACK),
+   WHITE_BISHOP(6, GenericPiece.BISHOP, Colour.WHITE),
+   BLACK_BISHOP(7, GenericPiece.BISHOP, Colour.BLACK),
+   WHITE_QUEEN(8, GenericPiece.QUEEN, Colour.WHITE),
+   BLACK_QUEEN(9, GenericPiece.QUEEN, Colour.BLACK),
+   WHITE_KING(10, GenericPiece.KING, Colour.WHITE),
+   BLACK_KING(11, GenericPiece.KING, Colour.BLACK);
    
    public int index;
+   public Colour colour;
+   public GenericPiece genericPiece;
    
-   Piece(int index)
+   Piece(int index, GenericPiece gp, Colour c)
    {
       this.index = index;
+      this.genericPiece = gp;
+      this.colour = c;
    }
+   
+   public static Piece get(GenericPiece f,Colour c){
+      //TODO cambiar implementacion para que lo devuelva sin realizar búsqueda
+      for(Piece pieza: values()){
+         if(pieza.genericPiece == f && pieza.colour == c)
+            return pieza;
+      }
+      return null;
+   }
+   
+   public String toFenString(){
+      switch(index){
+         case 0:
+            return "P";
+         case 1:
+            return "p";
+         case 2:
+            return "R";
+         case 3:
+            return "r";
+         case 4:
+            return "N";
+         case 5:
+            return "n";
+         case 6:
+            return "B";
+         case 7:
+            return "b";
+         case 8:
+            return "Q";
+         case 9:
+            return "q";
+         case 10:
+            return "K";
+         case 11:
+            return "k";
+         default:
+            return "";  
+      }
+   }
+   
 }

@@ -103,4 +103,18 @@ public enum Square
    {
       return index % 8;
    }
+   
+   public static Square fromRankAndFile(int rank,int file){
+      if(rank > 7 || file > 7 || rank < 0 || file < 0)
+         return null;
+      else
+         return Square.values()[(8 * rank) + file];
+   }
+   
+   public static Square fromIndex(int index){
+      if(index < 0 || index > 63)
+         return null;
+      else
+         return Square.values()[index];
+   }
 }
