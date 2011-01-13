@@ -94,15 +94,68 @@ public enum Square
       this.index = index;
    }
    
-   public int getRank()
+   public Rank getRank()
    {
-      return index / 8;
+      return Rank.fromIndex(index / 8);
    }
    
-   public int getFile()
+   public File getFile()
    {
-      return index % 8;
+      return File.fromIndex(index % 8);
    }
+   
+   public Square getNext()
+   {
+	   if(index >= Square.h8.index || index < Square.a1.index)
+		   return null;
+	   
+	   return Square.fromIndex(index + 1);
+   }
+   
+   public Square getPrevious()
+   {	
+	   if(index <= Square.a1.index || index > Square.h8.index)
+		   return null;
+	   
+	   return Square.fromIndex(index - 1);
+   }
+  
+   public Square getNextInRank()
+   {
+	   File file = getFile();
+       if(file.index <= File.a.index || file.index >= File.h.index)
+           return null;
+       
+       return Square.fromRankAndFile(getRank().index, file.index + 1);
+   }
+   
+   public Square getPreviousInRank()
+   {
+      File file = getFile();
+      if(file.index <= File.a.index || file.index > File.h.index)
+          return null;
+      
+      return Square.fromRankAndFile(getRank().index, file.index - 1);
+   }
+   
+   public Square getNextInFile()
+   {
+      Rank rank = getRank();   
+      if(rank.index < Rank._1.index || rank.index >= Rank._8.index)
+          return null;
+      
+      return Square.fromRankAndFile(rank.index + 1, getFile().index);
+   }
+   
+   public Square getPreviousInFile()
+   {   
+      Rank rank = getRank();   
+      if(rank.index <= Rank._1.index || rank.index > Rank._8.index)
+         return null;
+       
+      return Square.fromRankAndFile(rank.index - 1, getFile().index);
+   }
+   
    
    public static Square fromRankAndFile(int rank,int file){
       if(rank > 7 || file > 7 || rank < 0 || file < 0)

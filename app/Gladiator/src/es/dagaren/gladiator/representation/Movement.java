@@ -20,7 +20,8 @@ package es.dagaren.gladiator.representation;
  * @author dagaren
  *
  */
-public class Movement {
+public class Movement
+{
    private Square sourceSquare;
    private Square destinationSquare;
    
@@ -32,11 +33,13 @@ public class Movement {
    private boolean inPassant;
 
    
-   public Movement(){
+   public Movement()
+   {
       
    }
    
-   public Movement(String movString){
+   public Movement(String movString)
+   {
       int sourceFile = movString.charAt(0) - 'a';
       int sourceRank = movString.charAt(1) - '1';
       int destinationFile = movString.charAt(2) - 'a';
@@ -49,99 +52,110 @@ public class Movement {
    /**
     * @return the alPaso
     */
-   public boolean isInPassant() {
+   public boolean isInPassant()
+   {
       return inPassant;
    }
 
    /**
     * @param inPassant the alPaso to set
     */
-   public void setEnPassant(boolean inPassant) {
+   public void setEnPassant(boolean inPassant)
+   {
       this.inPassant = inPassant;
    }
 
    /**
     * @return the destino
     */
-   public Square getDestination() {
+   public Square getDestination()
+   {
       return destinationSquare;
    }
 
    /**
     * @param destination the destino to set
     */
-   public void setDestination(Square destination) {
+   public void setDestination(Square destination)
+   {
       this.destinationSquare = destination;
    }
 
    /**
     * @return the origen
     */
-   public Square getSource() {
+   public Square getSource()
+   {
       return sourceSquare;
    }
 
    /**
     * @param source the origen to set
     */
-   public void setSource(Square source) {
+   public void setSource(Square source)
+   {
       this.sourceSquare = source;
    }
 
    /**
     * @return the piezaCoronacion
     */
-   public Piece getPromotionPiece() {
+   public Piece getPromotionPiece()
+   {
       return promotionPiece;
    }
 
    /**
     * @param promotionPiece the piezaCoronacion to set
     */
-   public void setPromotionPiece(Piece promotionPiece) {
+   public void setPromotionPiece(Piece promotionPiece)
+   {
       this.promotionPiece = promotionPiece;
    }
 
    /**
     * @return the piezaDestino
     */
-   public Piece getDestinationPiece() {
+   public Piece getDestinationPiece()
+   {
       return destinationPiece;
    }
 
    /**
     * @param destinationPiece the piezaDestino to set
     */
-   public void setDestinationPiece(Piece destinationPiece) {
+   public void setDestinationPiece(Piece destinationPiece)
+   {
       this.destinationPiece = destinationPiece;
    }
 
    /**
     * @return the piezaOrigen
     */
-   public Piece getSourcePiece() {
+   public Piece getSourcePiece() 
+   {
       return sourcePiece;
    }
 
    /**
     * @param sourcePiece the piezaOrigen to set
     */
-   public void setSourcePiece(Piece sourcePiece) {
+   public void setSourcePiece(Piece sourcePiece)
+   {
       this.sourcePiece = sourcePiece;
    }
    
-   public boolean equals(Object m){
+   public boolean equals(Object m)
+   {
       Movement mov = (Movement)m;
       
       if(this.sourceSquare != mov.sourceSquare)
          return false;
       if(this.destinationSquare != mov.destinationSquare)
          return false;
-      
-      GenericPiece fichaThis = this.getPromotionGenericPiece();
-      GenericPiece fichaMov = mov.getPromotionGenericPiece();
-
-      if(fichaThis != fichaMov){
+     
+      if(this.getPromotionGenericPiece() != mov.getPromotionGenericPiece())
+      {
          return false;
       }
       
@@ -151,25 +165,31 @@ public class Movement {
    /**
     * @return the fichaCoronacion
     */
-   public GenericPiece getPromotionGenericPiece() {
+   public GenericPiece getPromotionGenericPiece()
+   {
       return this.promotionPiece != null ? this.promotionPiece.genericPiece : null;
    }
    
    /**
     * @param fichaCoronacion the fichaCoronacion to set
     */
-   public void setFichaCoronacion(GenericPiece fichaCoronacion) {
+   public void setFichaCoronacion(GenericPiece fichaCoronacion)
+   {
       this.promotionPiece = Piece.get(fichaCoronacion, Colour.WHITE);
    }
    
-   public static Movement getMovementEnroqueLargo(Colour turno){
+   public static Movement getMovementEnroqueLargo(Colour turno)
+   {
       Movement mov = new Movement();
       
-      if(turno == Colour.WHITE){
+      if(turno == Colour.WHITE)
+      {
          mov.setSourcePiece(Piece.WHITE_KING);
          mov.setSource(Square.e1);
          mov.setDestination(Square.c1);
-      }else{
+      }
+      else
+      {
          mov.setSourcePiece(Piece.BLACK_KING);
          mov.setSource(Square.e8);
          mov.setDestination(Square.c8);
@@ -178,14 +198,18 @@ public class Movement {
       return mov;
    }
    
-   public static Movement getMovementEnroqueCorto(Colour turno){
+   public static Movement getMovementEnroqueCorto(Colour turno)
+   {
       Movement mov = new Movement();
 
-      if(turno == Colour.WHITE){
+      if(turno == Colour.WHITE)
+      {
          mov.setSourcePiece(Piece.WHITE_KING);
          mov.setSource(Square.e1);
          mov.setDestination(Square.g1);
-      }else{
+      }
+      else
+      {
          mov.setSourcePiece(Piece.BLACK_KING);
          mov.setSource(Square.e8);
          mov.setDestination(Square.g8);

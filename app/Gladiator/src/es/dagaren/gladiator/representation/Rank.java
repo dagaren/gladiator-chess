@@ -39,7 +39,7 @@ public enum Rank
       this.index = index;
    }
    
-   public Rank fromIndex(int index)
+   public static Rank fromIndex(int index)
    {
       return Rank.values()[index];
    }

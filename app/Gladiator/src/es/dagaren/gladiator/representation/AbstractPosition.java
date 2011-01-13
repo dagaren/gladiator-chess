@@ -22,7 +22,8 @@ import java.util.List;
  * @author dagaren
  *
  */
-public abstract class AbstractPosition implements Position{
+public abstract class AbstractPosition implements Position
+{
    /**
     * Establece el bando al que le toca jugar
     */
@@ -390,7 +391,9 @@ public abstract class AbstractPosition implements Position{
             throw new RuntimeException("Posición fen incorrecta: "
                   + fenPosition);
 
-         // TODO cnstruir la casilla y pasarla
+         
+         // TODO construir la casilla y pasarla
+         setEnPassantSquare(Square.valueOf(enPassantString));
       }
       
       //Se recoge el número de movimientos para la regla de los 50 movimientos

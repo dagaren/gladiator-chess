@@ -384,6 +384,16 @@ public class BitboardPosition extends AbstractPosition {
    public static Square[] castlingLongDestinationSquares = new Square[2];
    public static Square[] castlingShortDestinationSquares = new Square[2];
    
+   //Casillas relacionadas con las capturas al paso
+   
+   
+   //Array con las casillas de destino del atacante en un captura al paso,
+   //teniendo como índice la casilla que se encuentra 'al paso'
+   public static Square[] enPassantSquareDestination = new Square[64];
+   //Array con las casillas 'que se encuentran al paso' en una captura al paso,
+   //teniendo como índice la casilla destino en la que se coloca el atacante.
+   public static Square[] enPassantSquareSource = new Square[64];
+   
    //Cola en la que se almacenan los
    protected Deque<IrreversibleState> stateStack = new ArrayDeque<IrreversibleState>(20);
    
@@ -934,6 +944,37 @@ public class BitboardPosition extends AbstractPosition {
       castlingShortKingSquares[Colour.BLACK.index] = new Square[2];
       castlingShortKingSquares[Colour.BLACK.index][0] = Square.f8;
       castlingShortKingSquares[Colour.BLACK.index][1] = Square.g8;
+      
+      
+      //Se inicializan los arrays de casillas relacionadas con las capturas al paso
+      for(Square  s = Square.a1; s != null; s = s.getNext())
+      {
+         if(s.getRank() == Rank._3)
+         {
+            enPassantSquareSource[s.index] = s.getNextInFile();
+            enPassantSquareDestination[s.index] = null;
+         }
+         else if(s.getRank() == Rank._6)
+         {
+            enPassantSquareSource[s.index] = s.getPreviousInFile();
+            enPassantSquareDestination[s.index] = null;
+         }
+         else if(s.getRank() == Rank._4)
+         {
+            enPassantSquareDestination[s.index] = s.getPreviousInFile();
+            enPassantSquareSource[s.index] = null;
+         }
+         else if(s.getRank() == Rank._5)
+         {
+            enPassantSquareDestination[s.index] = s.getNextInFile();
+            enPassantSquareSource[s.index] = null;
+         }
+         else
+         {
+            enPassantSquareSource[s.index] = null;
+            enPassantSquareDestination[s.index] = null;
+         }    
+      }
       
       long to = System.currentTimeMillis();
       
@@ -1532,6 +1573,22 @@ public class BitboardPosition extends AbstractPosition {
          putPiece(dp,ds);
       putPiece(sp,ss);
       
+      //Si es captura al paso se pone un peón en la casilla correspondiente 
+      //TODO añadir comprobación de si es casilla al paso en el caso
+      //de que sea un movimiento de peón en diagonal (origen.file != destino.file)
+      //y en la casilla destino no exista pieza
+      if(mov.isInPassant())
+      {
+         if(ds.getRank() == Rank._3)
+         {
+            putPiece(Piece.WHITE_PAWN, enPassantSquareSource[ds.index]);
+         }
+         else if(ds.getRank() == Rank._6)
+         {
+            putPiece(Piece.BLACK_PAWN, enPassantSquareDestination[ds.index]);
+         }
+      }
+      
       //TODO implementar enroques.
       if(sp == Piece.WHITE_KING && ss == Square.e1)
       {
@@ -1611,6 +1668,15 @@ public class BitboardPosition extends AbstractPosition {
       removePiece(ss);
       removePiece(ds);
       
+      //Si es captura al paso se quita el peón de su casilla
+      //TODO añadir comprobación de si es casilla al paso en el caso
+      //de que sea un movimiento de peón en diagonal (origen.file != destino.file)
+      //y en la casilla destino no exista pieza
+      if(mov.isInPassant())
+      {
+         removePiece(enPassantSquareSource[ds.index]);
+      }
+      
       if(pp != null)
       {
          putPiece(pp,ds);
@@ -1677,7 +1743,8 @@ public class BitboardPosition extends AbstractPosition {
             {
                this.whiteCastlingShort = false;
             }
-         }else if(sp == Piece.BLACK_ROOK)
+         }
+         else if(sp == Piece.BLACK_ROOK)
          {
             if(ss == Square.a8)
             {
@@ -1693,26 +1760,27 @@ public class BitboardPosition extends AbstractPosition {
       
       //Todo ver si el movimiento hace que un peón se quede en disposición
       //de ser capturado al paso
+      this.enPassantSquare = null;
       if(sp.genericPiece == GenericPiece.PAWN)
       {
          if(sp == Piece.WHITE_PAWN)
          {
-            if(ss.getRank() == Rank._2.index && ds.getRank() == Rank._4.index)
+            if(ss.getRank() == Rank._2 && ds.getRank() == Rank._4)
             {
-               this.enPassantSquare = ds;
+               this.enPassantSquare = enPassantSquareDestination[ds.index];
             }
          }
          else
          {
-            if(ss.getRank() == Rank._7.index && ds.getRank() == Rank._5.index)
+            if(ss.getRank() == Rank._7 && ds.getRank() == Rank._5)
             {
-               this.enPassantSquare = ds;
+               this.enPassantSquare = enPassantSquareDestination[ds.index];
             }
          }
       }
       
       //Actualizar regla 50 movimientos
-      if(dp != null || sp.genericPiece == GenericPiece.PAWN)
+      if(dp != null || sp.genericPiece == GenericPiece.PAWN || mov.isInPassant())
       {
          //Si es un movimiento de peón o captura se resetea el contador
          //de la regla de los 50 movimientos
@@ -1781,6 +1849,7 @@ public class BitboardPosition extends AbstractPosition {
       int pieceSquareIndex;
       int checkSquareIndex;
       long bbAttacked;
+      long bbAttackedBefore;
       long bbConnection;
       int kingSquareIndex;
       long bbKing;
@@ -1803,6 +1872,7 @@ public class BitboardPosition extends AbstractPosition {
       Piece capturePiece;
       Square sourceSquare;
       Square destinationSquare;
+      long bbEnPassantCapture;
       
       bbTurnOccupied = bbColourOccupation[turn.index];
       bbOppositeOccupied = bbColourOccupation[turn.opposite().index];
@@ -2832,6 +2902,18 @@ public class BitboardPosition extends AbstractPosition {
             
             bbAttacked |= bbAdvances;
             
+            bbEnPassantCapture = 0;
+            //Se comprueba si es posible la captura al paso
+            if(enPassantSquare != null)
+            {
+               bbAttackedBefore = bbAttacked;
+               bbAttacked |=    bbAttackedFromSquare[pieceSquareIndex] &
+                                bbSquare[enPassantSquare.index];
+               if(bbAttackedBefore != bbAttacked)
+               {
+                  bbEnPassantCapture = bbSquare[enPassantSquareSource[enPassantSquare.index].index];
+               }
+            }
             //////////////////////////////
             
             //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
@@ -2865,7 +2947,33 @@ public class BitboardPosition extends AbstractPosition {
                      }
                   }
                }
-            }
+
+               if(bbEnPassantCapture != 0 && 
+                     ((bbAttacked & bbSquare[enPassantSquare.index]) != 0) &&
+                     (Square.fromIndex(kingSquareIndex).getRank() == enPassantSquareSource[enPassantSquare.index].getRank()))
+               {BitboardUtils.printInConsole(bbAttacked);
+                  //Se comprueba si hay que eliminar la captura al paso debido a
+                  //que resultaría en una posición de jaque
+                  if((bbExclusiveConnection[pieceSquareIndex][kingSquareIndex] & 
+                     (bbOccupation ^
+                      bbSquare[enPassantSquareSource[enPassantSquare.index].index])) == 0)
+                  {
+                     bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] &
+                        (bbAttackerToSquare[pieceSquareIndex] | 
+                         bbAttackerToSquare[enPassantSquareSource[enPassantSquare.index].index] ) & 
+                         bbOppositeOccupied;
+                     if(bbAttacker != 0)
+                     {
+                        genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                        if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                        {
+                           //Eliminar el ovimiento de captura al paso
+                           bbAttacked = bbAttacked ^ bbSquare[enPassantSquare.index];
+                        }
+                     }
+                  } 
+               }
+            }            
             
             /////////////////////////////
             
@@ -2882,6 +2990,13 @@ public class BitboardPosition extends AbstractPosition {
                   mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
                   mov.setDestinationPiece(capture);
+                  
+                  //Se comprueba si es un movimiento al paso
+                  if(enPassantSquare != null && 
+                        attackedSquareIndex == enPassantSquare.index)
+                  {
+                     mov.setEnPassant(true);
+                  }
                
                   movesList.add(mov);
                   if(capture != null)

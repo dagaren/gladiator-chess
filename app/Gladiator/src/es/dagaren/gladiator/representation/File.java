@@ -38,7 +38,7 @@ public enum File
       this.index = index;
    }
    
-   public File fromIndex(int index)
+   public static File fromIndex(int index)
    {
       return File.values()[index];
    }
