@@ -26,6 +26,7 @@ public class ConsoleCommandController extends CommandController implements Runna
 {
    boolean stopped = true;
    
+   Thread t;
    
    @Override
    public void sendCommand(String command) 
@@ -34,19 +35,26 @@ public class ConsoleCommandController extends CommandController implements Runna
    }
 
    @Override
-   public void start()
+   public synchronized void start()
    {
       if(stopped)
-         new Thread(this).start();
+      {
+         t = new Thread(this);
+         t.setDaemon(true); //NECESARIO PARA QUE SE PUEDA INTERRUMPIR EL HILO
+                            //QUE LEE DE LA ENTRADA ESTÁNDAR
+         t.start();
+      } 
    }
 
    @Override
-   public void stop() 
+   public synchronized void stop() 
    {
-      stopped = false;
+      stopped = true;
       
-      //TODO falta hacer que se despierte el hilo en
-      //caso de que esté dormido esperando una cadena
+      if(t != null)
+      {
+         t.interrupt();
+      }
    }
    
    public void run()
@@ -58,9 +66,12 @@ public class ConsoleCommandController extends CommandController implements Runna
       {
          String command = input.nextLine();
          
-         for(CommandReceiver receiver : receivers)
-         {
-            receiver.onCommandReceived(command);
+         synchronized(this)
+         {  
+            for(CommandReceiver receiver : receivers)
+            {
+               receiver.onCommandReceived(command);
+            }
          }
       }
    }
