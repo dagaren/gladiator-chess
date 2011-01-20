@@ -22,6 +22,8 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
+import es.dagaren.gladiator.notation.Notation;
+
 
 /**
  * @author dagaren
@@ -978,7 +980,7 @@ public class BitboardPosition extends AbstractPosition {
       
       long to = System.currentTimeMillis();
       
-      System.out.println("Tiempo de inicializacion de bitboards: " + (to - ti) +  " milisegundos");
+      System.err.println("Tiempo de inicializacion de bitboards: " + (to - ti) +  " milisegundos");
       
    } // Fin de iniciarlizar()
    
@@ -1013,7 +1015,7 @@ public class BitboardPosition extends AbstractPosition {
       bbOccupation = bbWhiteOccupation | bbBlackOccupation;
       
       long to = System.currentTimeMillis();
-      System.out.println("Tiempo de actualizacion de ocupadas: "+(to-ti)+ " milisegundos");
+      //System.out.println("Tiempo de actualizacion de ocupadas: "+(to-ti)+ " milisegundos");
       
    } //Fin de actualizarOcupadas()
    
@@ -1561,6 +1563,13 @@ public class BitboardPosition extends AbstractPosition {
     */
    public boolean undoMove(Movement mov)
    {
+//      if(mov.isInPassant())
+//      {
+//         System.err.println("Undo move in passant: " + Notation.toString(mov));
+//         System.err.println(this.toString());
+//      }
+     //System.err.println("Undo Move (antes): " + Notation.toString(mov));
+   //System.err.println(this.toString());
       resetMoves();
       
       Piece sp = mov.getSourcePiece();
@@ -1585,7 +1594,7 @@ public class BitboardPosition extends AbstractPosition {
          }
          else if(ds.getRank() == Rank._6)
          {
-            putPiece(Piece.BLACK_PAWN, enPassantSquareDestination[ds.index]);
+            putPiece(Piece.BLACK_PAWN, enPassantSquareSource[ds.index]);
          }
       }
       
@@ -1638,6 +1647,9 @@ public class BitboardPosition extends AbstractPosition {
       this.blackCastlingShort = state.shortCastling[Colour.BLACK.index];
       /////
       
+      //System.err.println("Undo Move (despues): " + Notation.toString(mov));
+      //System.err.println(this.toString());
+      
       return true;
    }
    
@@ -1645,7 +1657,8 @@ public class BitboardPosition extends AbstractPosition {
     * @see es.dagaren.chesi.Posicion#hacerMovement(es.dagaren.chesi.Movement)
     */
    public boolean doMove(Movement mov)
-   {
+   {//System.err.println("Do Move (antes): " + Notation.toString(mov));
+   //System.err.println(this.toString());
       //Se recoge el estado irreversible actual y se mete en la pila
       IrreversibleState state = new IrreversibleState();
       state.enPassantSquare = this.enPassantSquare;
@@ -1756,6 +1769,27 @@ public class BitboardPosition extends AbstractPosition {
             }
          }
       }
+      //Se comprueba si es una captura de una torre en casilla
+      //origigen quitar permiso enroque.
+      if(dp != null && dp.genericPiece == GenericPiece.ROOK)
+      {
+        if(ds == Square.a1 && this.whiteCastlingLong)
+        {
+           whiteCastlingLong = false;
+        }
+        else if(ds == Square.a8 && this.blackCastlingLong)
+        {
+           blackCastlingLong = false;
+        }
+        else if(ds == Square.h1 && this.whiteCastlingShort)
+        {
+           whiteCastlingShort = false;
+        }
+        else if(ds == Square.h8 && this.blackCastlingShort)
+        {
+           blackCastlingShort = false;
+        }
+      }
       
       
       //Todo ver si el movimiento hace que un peón se quede en disposición
@@ -1801,6 +1835,9 @@ public class BitboardPosition extends AbstractPosition {
       //Se actualizan los bitboards para la posición resultante
       updateAttackedFromFull();
       
+      
+      //System.err.println("Do Move (despues): " + Notation.toString(mov));
+      //System.err.println(this.toString());
       
       return true;
    }
@@ -3195,7 +3232,9 @@ public class BitboardPosition extends AbstractPosition {
       }
       else
       {
-         System.out.println("ERROR: intentando poner pieza en casilla no vacia");
+         System.err.println("Poniendo " + pieza.name() + " en casilla " + casilla.name());
+         System.err.println(this.toString());
+         System.err.println("ERROR: intentando poner pieza en casilla no vacia");
          System.exit(0);
       }
    }
