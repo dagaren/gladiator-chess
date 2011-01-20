@@ -40,7 +40,7 @@ public class Evaluator
       int score = 0;
       
       score += evaluateMaterial(position);
-      score += 0.1 * evaluateMobility(position);
+      score += 0.5 * evaluateMobility(position);
       
       if(turn == Colour.WHITE)
          return score;
@@ -62,7 +62,7 @@ public class Evaluator
       score -= position.getNumPieces(Piece.BLACK_ROOK)   * ROOK_SCORE;
       score -= position.getNumPieces(Piece.BLACK_BISHOP) * BISHOP_SCORE;
       score -= position.getNumPieces(Piece.BLACK_KNIGHT) * KNIGHT_SCORE;
-      score += position.getNumPieces(Piece.BLACK_QUEEN)  * QUEEN_SCORE;
+      score -= position.getNumPieces(Piece.BLACK_QUEEN)  * QUEEN_SCORE;
       
       return score;
    }
