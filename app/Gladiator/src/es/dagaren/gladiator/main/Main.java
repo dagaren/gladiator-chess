@@ -16,6 +16,13 @@
  */
 package es.dagaren.gladiator.main;
 
+import es.dagaren.gladiator.communication.CommandController;
+import es.dagaren.gladiator.communication.ConsoleCommandController;
+import es.dagaren.gladiator.communication.xboard.EngineAdapter;
+import es.dagaren.gladiator.communication.xboard.EngineController;
+import es.dagaren.gladiator.engine.Engine;
+import es.dagaren.gladiator.representation.BitboardPosition;
+
 /**
  * @author dagaren
  *
@@ -28,7 +35,52 @@ public class Main
     */
    public static void main(String[] args)
    {
+      //TODO Se analizan los argumentos
       
-      System.out.println("TERMINACIÓN NORMAL DE PROGRAMA");
+      
+      
+      //Se inicializan los bitboards de posicion
+      BitboardPosition.init();
+      
+      //Se crea el motor
+      Engine gladiatorEngine = new Engine();
+      
+      //Se crea el controlador de comandos por consola
+      CommandController commandController = new ConsoleCommandController();
+      
+      //Se crea el controlador xboard
+      EngineController xboardController = new EngineController();
+      //Se establece el controlador de comandos del controlador xboard
+      xboardController.setCommandController(commandController);
+      
+      
+      //Se crea el adaptador xboard
+      EngineAdapter xboardAdapter = new EngineAdapter();
+      //Se asigna el motor al adaptador
+      xboardAdapter.setEngine(gladiatorEngine);
+      //Se asigna el controlador xboard al adaptador
+      xboardAdapter.setEngineController(xboardController);
+      //Se establece el el adaptador como receptor de comandos del controlador
+      xboardController.setReceiver(xboardAdapter);
+      
+      
+      //Se arranca el controlador de comandos
+      commandController.start();
+      
+      /** 
+       * A PARTIR DE ESTE MOMENTO SE COMIENZAN A
+       * RECIBIR Y PROCESAR LOS COMANDOS 
+       **/
+      
+      //Se espera a que el motor finalice
+      gladiatorEngine.waitForFinish();
+      
+      //Se para el controlador de comandos
+      commandController.stop();
+      
+      
+      System.err.println("TERMINACIÓN NORMAL DE PROGRAMA");
+      
+      //System.exit(0);
    }
 }
