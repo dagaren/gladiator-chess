@@ -141,7 +141,7 @@ public class Searcher implements Runnable
       long time = System.currentTimeMillis();
       
       SearchInfo info = new SearchInfo();
-      info.time = time - initTime;
+      info.time = (time - initTime) / 10;
       info.principalVariation = this.principalVariation;
       info.nodes = this.visitedNodes;
       info.deep = this.deep;
