@@ -18,6 +18,7 @@ package es.dagaren.gladiator.main;
 
 import es.dagaren.gladiator.communication.CommandController;
 import es.dagaren.gladiator.communication.ConsoleCommandController;
+import es.dagaren.gladiator.communication.ConsoleDebugCommandController;
 import es.dagaren.gladiator.communication.xboard.EngineAdapter;
 import es.dagaren.gladiator.communication.xboard.EngineController;
 import es.dagaren.gladiator.engine.Engine;
@@ -38,7 +39,6 @@ public class Main
       //TODO Se analizan los argumentos
       
       
-      
       //Se inicializan los bitboards de posicion
       BitboardPosition.init();
       
@@ -46,7 +46,7 @@ public class Main
       Engine gladiatorEngine = new Engine();
       
       //Se crea el controlador de comandos por consola
-      CommandController commandController = new ConsoleCommandController();
+      CommandController commandController = new ConsoleDebugCommandController();
       
       //Se crea el controlador xboard
       EngineController xboardController = new EngineController();
