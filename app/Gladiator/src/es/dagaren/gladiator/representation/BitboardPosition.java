@@ -980,7 +980,7 @@ public class BitboardPosition extends AbstractPosition {
       
       long to = System.currentTimeMillis();
       
-      System.err.println("Tiempo de inicializacion de bitboards: " + (to - ti) +  " milisegundos");
+      //System.err.println("Tiempo de inicializacion de bitboards: " + (to - ti) +  " milisegundos");
       
    } // Fin de iniciarlizar()
    
@@ -990,7 +990,7 @@ public class BitboardPosition extends AbstractPosition {
     */
    protected void updateOcupied()
    {
-      long ti = System.currentTimeMillis();
+      //long ti = System.currentTimeMillis();
       
       //Se calcula el bitboard de ocupación de piezas blancas
       bbWhiteOccupation = bbPiecesOccupation[Piece.WHITE_PAWN.index] |
@@ -1014,7 +1014,7 @@ public class BitboardPosition extends AbstractPosition {
       //Se calcula el bitboard de las casillas ocupadas
       bbOccupation = bbWhiteOccupation | bbBlackOccupation;
       
-      long to = System.currentTimeMillis();
+      //long to = System.currentTimeMillis();
       //System.out.println("Tiempo de actualizacion de ocupadas: "+(to-ti)+ " milisegundos");
       
    } //Fin de actualizarOcupadas()

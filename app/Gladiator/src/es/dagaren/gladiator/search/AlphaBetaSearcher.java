@@ -114,8 +114,8 @@ public class AlphaBetaSearcher extends Searcher
          currentPrincipalVariation.clear();
          
          //Se realiza el siguiente movimiento en la lista
-Position clone = position.getCopy();
-String fenBefore = position.toFen();
+//Position clone = position.getCopy();
+//String fenBefore = position.toFen();
          position.doMove(move);
          
          //Se calcula la evaluación del movimiento
@@ -123,16 +123,16 @@ String fenBefore = position.toFen();
       
          //Se deshace el movimiento
          position.undoMove(move);
-String fenAfter = position.toFen();
-if(!fenBefore.equals(fenAfter))
-{
-   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: " + Notation.toString(move));
-   System.err.println("Position inicial:");
-   System.err.println("FEN inicial: " + fenBefore);
-   System.err.println(clone.toString());
-   System.err.println("FEN final: " + fenAfter);
-   System.err.println(position.toString());
-}
+//String fenAfter = position.toFen();
+//if(!fenBefore.equals(fenAfter))
+//{
+//   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: " + Notation.toString(move));
+//   System.err.println("Position inicial:");
+//   System.err.println("FEN inicial: " + fenBefore);
+//   System.err.println(clone.toString());
+//   System.err.println("FEN final: " + fenAfter);
+//   System.err.println(position.toString());
+//}
          
          if(score >= beta)
          {
@@ -236,8 +236,8 @@ if(!fenBefore.equals(fenAfter))
          currentPrincipalVariation.clear(); 
          
          //Se realiza el siguiente movimiento en la lista
-Position clone = position.getCopy();
-String fenBefore = position.toFen();
+//Position clone = position.getCopy();
+//String fenBefore = position.toFen();
          position.doMove(move);
       
          //Se calcula la puntuación del movimiento
@@ -245,17 +245,17 @@ String fenBefore = position.toFen();
          
          //Tras evaluar el movimiento se deshace
          position.undoMove(move);
-String fenAfter = position.toFen();
-if(!fenBefore.equals(fenAfter))
-{
-   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: (quiescence) "  + Notation.toString(move));
-   System.err.println("Position inicial:");
-   System.err.println("FEN inicial: " + fenBefore);
-   System.err.println(clone.toString());
-   System.err.println("FEN final: " + fenAfter);
-   System.err.println(position.toString());
-   System.exit(0);
-}
+//String fenAfter = position.toFen();
+//if(!fenBefore.equals(fenAfter))
+//{
+//   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: (quiescence) "  + Notation.toString(move));
+//   System.err.println("Position inicial:");
+//   System.err.println("FEN inicial: " + fenBefore);
+//   System.err.println(clone.toString());
+//   System.err.println("FEN final: " + fenAfter);
+//   System.err.println(position.toString());
+//   System.exit(0);
+//}
          
          if(score >= beta)
          {
