@@ -19,7 +19,9 @@ package es.dagaren.gladiator.communication.xboard;
 import es.dagaren.gladiator.engine.Engine;
 import es.dagaren.gladiator.engine.EngineObserver;
 import es.dagaren.gladiator.notation.Notation;
+import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.Movement;
+import es.dagaren.gladiator.representation.Position;
 import es.dagaren.gladiator.search.SearchInfo;
 
 /**
@@ -32,6 +34,9 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    private Engine engine;
    private EngineController engineController;
    
+   private boolean ponderingActive = false;
+   
+   private States state = States.OBSERVING;
    
    /**
     * @param engineController the engineController to set
@@ -79,7 +84,19 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void New()
    {
+      engine.stop();
+      
+      engine.setOwnTurn(Colour.BLACK);
+      
+      //TODO asociar, resetear y parar los relojes
+      
+      //TODO no ponderar en este momento
+      
+      engine.resetDepthLimit();
+      
       engine.newGame();
+      
+      state = States.WAITING;
    }
 
    /* (non-Javadoc)
@@ -108,8 +125,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void white()
    {
-      // TODO Implementar (comando no obsoleto en la versión 2 del protocolo 
-      System.err.println("Comando no implementado: white");
+      engine.setOwnTurn(Colour.BLACK);
    }
 
    /* (non-Javadoc)
@@ -118,8 +134,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void black()
    {
-   // TODO Implementar (comando obsoleto en la versión 2 del protocolo
-      System.err.println("Comando no implementado: black");
+      engine.setOwnTurn(Colour.WHITE);
    }
 
    /* (non-Javadoc)
@@ -130,6 +145,27 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    {
       // TODO Implementar
       System.err.println("Comando no implementado: computer");
+   }
+   
+   @Override
+   public synchronized void pause()
+   {
+      engine.stop();
+   }
+   
+   @Override
+   public synchronized void resume()
+   {
+      engine.resume();
+   }
+   
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.UserToEngine#ping(java.lang.String)
+    */
+   @Override
+   public void ping(String n)
+   {
+      // TODO Auto-generated method stub  
    }
 
    /* (non-Javadoc)
@@ -178,7 +214,14 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void force()
    {
+      //Se hace que el motor no juegue ningún color
+      
+      //TODO se paran los relojes
+      
       engine.stop();
+      engine.setOwnTurn(null);
+      
+      state = States.OBSERVING;
    }
 
    /* (non-Javadoc)
@@ -187,7 +230,28 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void go()
    {
-      engine.move();
+      if(state == States.OBSERVING)
+      {
+         Colour turn = engine.getPosition().getTurn();
+         
+         engine.setOwnTurn(turn);
+         
+         //TODO asociar los relojes
+         
+         engine.think();
+      }
+   }
+   
+   @Override
+   public synchronized void playother()
+   {
+      if(state == States.OBSERVING)
+      {
+         engine.setOwnTurn(engine.getPosition().getTurn().opposite());
+         
+         //Para que se active la ponderación en caso de que este permitida.
+         engine.think();
+      }
    }
 
    /* (non-Javadoc)
@@ -224,11 +288,13 @@ public class EngineAdapter implements UserToEngine, EngineObserver
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#move(es.dagaren.gladiator.representation.Movement)
     */
    @Override
-   public synchronized void move(Movement move)
+   public synchronized void usermove(Movement move)
    {
       if(move != null)
       {
-         engine.opponentMove(move);
+         if(state == States.WAITING || state == States.PONDERING)
+            state = States.THINKING;
+         engine.doMove(move);
       }
       else
       {
@@ -242,8 +308,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void moveNow()
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: moveNow");
+      engine.forceMove();
    }
 
    /* (non-Javadoc)
@@ -252,8 +317,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void name(String name)
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: name");
+      //Se ignora el comando
    }
    
    /* (non-Javadoc)
@@ -300,8 +364,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void partner()
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: partner");
+      //Se ignora el comando
    }
 
    /* (non-Javadoc)
@@ -310,8 +373,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void ptell(String text)
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: ptell");
+      //Se ignaora el comando
    }
 
    /* (non-Javadoc)
@@ -320,6 +382,8 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void quit()
    {
+      state = States.OBSERVING;
+      
       engine.finish();
    }
 
@@ -339,8 +403,13 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void rating()
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: rating");
+      //Se ignora el comando
+   }
+   
+   @Override
+   public synchronized void ics(String hostname)
+   {
+      //Se ignora el comando
    }
 
    /* (non-Javadoc)
@@ -359,18 +428,45 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void result(String result, String comment)
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: result");
+      //Se ignora el comando
+      System.err.println("[EngineAdpater]: Se recibe comando result: " + result + comment);
    }
 
+   public synchronized void setboard(String fen)
+   {
+      engine.stop();
+      
+      Position position = engine.getPosition();
+      boolean isValid = position.loadFen(fen);
+      
+      if(!isValid)
+      {
+         engineController.tellusererror("Illegal position");
+      }
+      else
+      {
+         if(state == States.THINKING || state == States.PONDERING || state == States.WAITING)
+         {
+            engine.think();
+         }
+      }
+   }
+   
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#sd(java.lang.String)
     */
    @Override
-   public synchronized void sd(String deep)
+   public synchronized void sd(String depth)
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: sd");
+      try
+      {
+         int depthNumber = Integer.parseInt(depth);
+         engine.setDepthLimit(depthNumber);
+      }
+      catch(Exception ex)
+      {
+         System.err.println("[EngineAdapter.sd]: Imposible convertir cadena a entero: " + depth);
+      }
    }
 
    /* (non-Javadoc)
@@ -380,7 +476,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void st(String time)
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: st");
+      System.err.println("[EngineAdapter.st]: Comando no implementado");
    }
 
    /* (non-Javadoc)
@@ -390,7 +486,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void time(String n)
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: time");
+      System.err.println("[EngineAdapter.time]: Comando no implementado");
    }
 
    /* (non-Javadoc)
@@ -400,7 +496,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void undo()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: undo");
+      System.err.println("[EngineAdapter.undo]: Comando no implementado");
    }
 
    /* (non-Javadoc)
@@ -409,8 +505,8 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void variant(String name)
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: variant");
+      //No se soporta ninguna variante
+      engineController.error("command not implemented", "variant");
    }
 
    /* (non-Javadoc)
@@ -419,9 +515,63 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void xboard()
    {
-      // TODO Implementar
-      System.err.println("Comando no implementado: xboard");
+      engine.stop();
+      
+      state = States.OBSERVING;
    }
+   
+   
+   @Override
+   public synchronized void protover(String version)
+   {
+      try
+      {
+         int versionNum = Integer.parseInt(version);
+         
+         if(versionNum >= 2)
+         {
+            String features = 
+               "ping=0 " +
+               "setboard=1 " +
+               "playother=1 " +
+               "san=0 " +
+               "usermove=1 " +
+               "time=1 " +
+               "draw=1 " +
+               "sigint=0 " +
+               "sigterm=0 " +
+               "reuse=1 " +
+               "analyze=0 " +
+               "myname=\"Gladiator (v0.0.1)\" " +
+               "variants=\"normal\" " +
+               "colors=0 " +
+               "ics=0 " +
+               "name=0 " +
+               "pause=1 " +
+               "done=1";
+            
+            engineController.feature(features);
+         }
+      }
+      catch(Exception ex)
+      {
+         
+      }
+      
+   }
+   
+   @Override
+   public synchronized void accepted(String feature)
+   {
+      //TODO completar
+   }
+   
+   @Override
+   public synchronized void rejected(String feature)
+   {
+      //TODO completar
+   }
+   
 
    
    /** IMPLEMENTACIÓN DE METODOS DE LA INTERFAZ ENGINE_OBSERVER **/
@@ -450,6 +600,14 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public void onMoveDone(Movement selectedMove)
    {
       engineController.move(Notation.toString(selectedMove));
+      
+      if(state == States.THINKING)
+      {
+         if(ponderingActive)
+            state = States.PONDERING;
+         else
+            state = States.WAITING;
+      }
    }
 
    /* (non-Javadoc)

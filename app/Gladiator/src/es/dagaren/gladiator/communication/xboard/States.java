@@ -14,36 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package es.dagaren.gladiator.communication;
-
-import java.util.ArrayList;
-import java.util.List;
+package es.dagaren.gladiator.communication.xboard;
 
 /**
  * @author dagaren
  *
  */
-public abstract class CommandController 
+public enum States
 {
-   List<CommandReceiver> receivers = new ArrayList<CommandReceiver>();
-   
-   
-   public void addCommandReceiver(CommandReceiver receiver)
-   {
-      receivers.add(receiver);
-   }
-   
-   public void removeCommandRecevier(CommandReceiver receiver)
-   {
-      if(receivers.contains(receiver))
-         receivers.remove(receiver);
-   }
-   
-   public abstract void sendCommand(String command);
-   
-   public abstract void recieveCommand(String command);
-   
-   public abstract void start();
-   
-   public abstract void stop();
+   OBSERVING,
+   WAITING,
+   THINKING,
+   PONDERING,
+   ANALYZING,
+   EDITING
 }

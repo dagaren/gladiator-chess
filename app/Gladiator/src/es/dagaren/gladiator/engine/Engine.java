@@ -35,25 +35,26 @@ import es.dagaren.gladiator.search.SearcherObserver;
 public class Engine implements SearcherObserver
 {
    protected final String name    = "Gladiator";
-   protected final String version = "0.2";
+   protected final String version = "0.0.1";
    protected final String rating  = "(Unknown)";
    
    
    
    protected boolean  active = true;
-   
+
    protected Position position;
-   protected Searcher searcher; //TODO descomentar
+   protected Searcher searcher;
    
    private boolean publishSearchInfo = false;
    
    protected Colour ownTurn;
    protected Colour gameTurn;
-   
+
    protected EngineObserver observer;
 
-   protected int deepLimit;
-   
+   protected final int defaultDepthLimit = 4;
+   protected int depthLimit = defaultDepthLimit;
+
    protected boolean debug;
    
    public Engine()
@@ -61,7 +62,45 @@ public class Engine implements SearcherObserver
       searcher = new AlphaBetaSearcher();
       searcher.setObserver(this);
       
+      position = new BitboardPosition();
+      position.setInitialPosition();
+      
       ownTurn = Colour.BLACK;
+   }
+   
+   public int getDepthLimit()
+   {
+      return depthLimit;
+   }
+
+   public void setDepthLimit(int depthLimit)
+   {
+      this.depthLimit = depthLimit;
+   }
+   
+   public Position getPosition()
+   {
+      return position;
+   }
+
+   public void setPosition(Position position)
+   {
+      this.position = position;
+   }
+   
+   public void resetDepthLimit()
+   {
+      this.depthLimit = defaultDepthLimit;
+   }
+   
+   public Colour getOwnTurn()
+   {
+      return ownTurn;
+   }
+
+   public void setOwnTurn(Colour ownTurn)
+   {
+      this.ownTurn = ownTurn;
    }
    
    public synchronized void newGame()
@@ -71,24 +110,17 @@ public class Engine implements SearcherObserver
       position = new BitboardPosition();
       position.setInitialPosition();
       
-      System.err.println(position.toString());
-      
-      gameTurn = position.getTurn();
-      
-      if(gameTurn == ownTurn)
-      {
-         searcher.initSearch(this.position);
-      }
-   }
-   
-   public synchronized void move()
-   {
-      
+      think();
    }
    
    public synchronized void stop()
    {
-      //searcher.stop();
+      searcher.stop();
+   }
+   
+   public synchronized void resume()
+   {
+      think();
    }
    
    public synchronized void finish()
@@ -113,21 +145,17 @@ public class Engine implements SearcherObserver
       }
    }
    
-   public synchronized void opponentMove(Movement move)
+   public synchronized void doMove(Movement move)
    {
-      if(ownTurn != gameTurn)
+      if(!position.isValidMove(move))
       {
-         if(!position.isValidMove(move))
-         {
-            observer.onIncorrectMove(move);
-            
-            return;
-         }
+         observer.onIncorrectMove(move);
          
-         move = getFullMove(move);
-         
-         position.doMove(move);
+         return;
       }
+      
+      move = getFullMove(move);
+      position.doMove(move);
       
       if(position.isCheckmate())
       {
@@ -141,12 +169,22 @@ public class Engine implements SearcherObserver
       
       //TODO falta comprobante de tablas normales
       
-      gameTurn = position.getTurn();
-      
-      if(gameTurn == ownTurn)
+      this.think();
+   }
+   
+   public synchronized void forceMove()
+   {
+      //TODO implementar
+   }
+   
+   public void think()
+   {
+      if(position.getTurn() == ownTurn)
       {
-         searcher.initSearch(this.position);
+         searcher.initSearch(position);
       }
+      
+      //Iniciar ponderacion o analisis en funcion del estado
    }
    
    //TODO ver como quitar esto
@@ -209,8 +247,8 @@ public class Engine implements SearcherObserver
       }
       else
       {
-         System.err.println("[Engine.onSearchFinished] ERROR: LA VARIANTE PRINCIPAL ES NULA O VACIA");
-         System.exit(0);
+         //System.err.println("[Engine.onSearchFinished] ERROR: LA VARIANTE PRINCIPAL ES NULA O VACIA");
+         //System.exit(0);
       }
    }
 

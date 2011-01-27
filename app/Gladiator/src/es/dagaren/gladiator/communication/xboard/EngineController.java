@@ -88,6 +88,10 @@ public class EngineController extends ProtocolController implements
          {
             receiver.go();
          }
+         else if("playother".equals(command))
+         {
+            receiver.playother();
+         }
          else if ("white".equals(command))
          {
             receiver.white();
@@ -140,6 +144,13 @@ public class EngineController extends ProtocolController implements
          else if ("draw".equals(command))
          {
             receiver.draw();
+         }
+         else if("ping".equals(command))
+         {
+            commandScanner.next();
+            String n = commandScanner.next();
+            
+            receiver.ping(n);
          }
          else if (command.startsWith("result"))
          {
@@ -206,9 +217,59 @@ public class EngineController extends ProtocolController implements
          {
             receiver.rating();
          }
+         else if(command.startsWith("ics"))
+         {
+            commandScanner.next();
+            
+            String hostname = commandScanner.next();
+            receiver.ics(hostname);
+         }
          else if ("computer".equals(command))
          {
             receiver.computer();
+         }
+         else if("pause".equals(command))
+         {
+            receiver.pause();
+         }
+         else if("resume".equals(command))
+         {
+            receiver.resume();
+         }
+         else if(command.startsWith("protover"))
+         {
+            commandScanner.next();
+            
+            String version = commandScanner.next();
+            receiver.protover(version);
+         }
+         else if(command.startsWith("accepted"))
+         {
+            commandScanner.next();
+            
+            String feature = commandScanner.next();
+            receiver.accepted(feature);
+         }
+         else if(command.startsWith("rejected"))
+         {
+            commandScanner.next();
+            
+            String feature = commandScanner.next();
+            receiver.protover(feature);
+         }
+         else if(command.startsWith("setboard"))
+         {
+            commandScanner.next();
+            
+            String fen = commandScanner.nextLine().trim();
+            receiver.setboard(fen);
+         }
+         else if(command.startsWith("usermove"))
+         {
+            commandScanner.next();
+            
+            Movement move = Notation.parseMove(commandScanner.next());
+            receiver.usermove(move);
          }
          else
          {
@@ -216,11 +277,18 @@ public class EngineController extends ProtocolController implements
             // recoger un movimiento
             Movement move = Notation.parseMove(command);
 
-            receiver.move(move);
+            receiver.usermove(move);
          }
       }
    }
 
+   
+   @Override
+   public synchronized void feature(String features)
+   {
+      commandController.sendCommand("feature " + features);
+   }
+   
    /*
     * (non-Javadoc)
     * 
@@ -364,6 +432,56 @@ public class EngineController extends ProtocolController implements
    {
       commandController.sendCommand(deep + " " + rating + " " + time + " "
             + nodes + " " + pv);
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.EngineToUser#tellall(java.lang.String)
+    */
+   @Override
+   public void tellall(String message)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.EngineToUser#tellicsnoalias(java.lang.String)
+    */
+   @Override
+   public void tellicsnoalias(String message)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.EngineToUser#tellopponent(java.lang.String)
+    */
+   @Override
+   public void tellopponent(String message)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.EngineToUser#tellothers(java.lang.String)
+    */
+   @Override
+   public void tellothers(String message)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.EngineToUser#pong(java.lang.String)
+    */
+   @Override
+   public void pong(String n)
+   {
+      // TODO Auto-generated method stub
+      commandController.sendCommand("pong " + n);
    }
 
 }

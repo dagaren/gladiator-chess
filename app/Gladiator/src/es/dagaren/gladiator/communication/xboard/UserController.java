@@ -57,6 +57,21 @@ public class UserController extends ProtocolController implements UserToEngine
    }
    
    
+   public void protover(String version)
+   {
+      // TODO Auto-generated method stub
+   }
+   
+   public void rejected(String feature)
+   {
+      
+   }
+   
+   public void accepted(String feature)
+   {
+      
+   }
+   
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#New()
     */
@@ -156,6 +171,12 @@ public class UserController extends ProtocolController implements UserToEngine
       // TODO Auto-generated method stub
 
    }
+   
+   @Override
+   public void playother()
+   {
+      
+   }
 
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#hard()
@@ -199,7 +220,7 @@ public class UserController extends ProtocolController implements UserToEngine
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#move(es.dagaren.gladiator.representation.Movement)
     */
    @Override
-   public void move(Movement move)
+   public void usermove(Movement move)
    {
       // TODO Auto-generated method stub
    }
@@ -302,6 +323,25 @@ public class UserController extends ProtocolController implements UserToEngine
    {
       // TODO Auto-generated method stub
    }
+   
+   @Override
+   public void ics(String hostname)
+   {
+      // TODO Auto-generated method stub
+   }
+   
+   @Override
+   public void pause()
+   {
+      
+   }
+   
+   @Override
+   public void resume()
+   {
+      
+   }
+   
 
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#remove()
@@ -317,6 +357,12 @@ public class UserController extends ProtocolController implements UserToEngine
     */
    @Override
    public void result(String result, String comment)
+   {
+      // TODO Auto-generated method stub
+   }
+   
+   @Override
+   public void setboard(String fen)
    {
       // TODO Auto-generated method stub
    }
@@ -382,6 +428,17 @@ public class UserController extends ProtocolController implements UserToEngine
    public void xboard()
    {
       // TODO Auto-generated method stub
+   }
+
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.communication.xboard.UserToEngine#ping(java.lang.String)
+    */
+   @Override
+   public void ping(String n)
+   {
+      // TODO Auto-generated method stub
+      
    }
 
 }

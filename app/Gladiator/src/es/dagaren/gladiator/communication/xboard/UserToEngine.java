@@ -32,6 +32,21 @@ public interface UserToEngine
    /**
     * 
     */
+   public void protover(String version);
+   
+   /**
+    * 
+    */
+   public void accepted(String feature);
+   
+   /**
+    * 
+    */
+   public void rejected(String feature);
+   
+   /**
+    * 
+    */
    public void New();
    
    /**
@@ -65,6 +80,11 @@ public interface UserToEngine
     *
     */
    public void go();
+   
+   /**
+    * 
+    */
+   public void playother();
    
    
    /**
@@ -117,13 +137,19 @@ public interface UserToEngine
     * 
     *
     */
-   public void move(Movement move);
+   public void usermove(Movement move);
    
    /**
     * 
     *
     */
    public void moveNow();
+   
+   /**
+    * 
+    * @param n
+    */
+   public void ping(String n);
    
    /**
     * 
@@ -139,6 +165,12 @@ public interface UserToEngine
    public void result(String result, String comment);
    
 
+   /**
+    * 
+    * @param fen
+    */
+   public void setboard(String fen);
+   
    /**
     * 
     *
@@ -215,9 +247,25 @@ public interface UserToEngine
    
    /**
     * 
+    */
+   public void ics(String hostname);
+   
+   /**
+    * 
     *
     */
    public void computer();
+   
+   /**
+    * 
+    */
+   public void pause();
+   
+   /**
+    * 
+    */
+   public void resume();
+   
    
    /**
     * 

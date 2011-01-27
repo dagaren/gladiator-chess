@@ -22,6 +22,13 @@ package es.dagaren.gladiator.communication.xboard;
  */
 public interface EngineToUser
 {
+   
+   /**
+    * 
+    * @param features
+    */
+   public void feature(String features);
+   
    /**
     * 
     * @param move
@@ -50,6 +57,13 @@ public interface EngineToUser
     */
    public void result(String result, String comment);
    
+
+   /**
+    * 
+    * @param n
+    */
+   public void pong(String n);
+   
    
    /**
     * 
@@ -63,6 +77,23 @@ public interface EngineToUser
     */
    public void offerDraw();
    
+   /**
+    * 
+    * @param message
+    */
+   public void tellopponent(String message);
+   
+   /**
+    * 
+    * @param message
+    */
+   public void tellothers(String message);
+   
+   /**
+    * 
+    * @param message
+    */
+   public void tellall(String message);
    
    /**
     * 
@@ -89,6 +120,11 @@ public interface EngineToUser
     */
    public void tellics(String message);
    
+   /**
+    * 
+    * @param message
+    */
+   public void tellicsnoalias(String message);
    
    /**
     * 

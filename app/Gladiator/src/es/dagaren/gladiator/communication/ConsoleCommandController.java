@@ -33,6 +33,15 @@ public class ConsoleCommandController extends CommandController implements Runna
    {
       System.out.println(command);
    }
+   
+   @Override
+   public void recieveCommand(String command) 
+   {
+      for(CommandReceiver receiver : receivers)
+      {
+         receiver.onCommandReceived(command);
+      }
+   }
 
    @Override
    public synchronized void start()
@@ -68,10 +77,7 @@ public class ConsoleCommandController extends CommandController implements Runna
          
          synchronized(this)
          {  
-            for(CommandReceiver receiver : receivers)
-            {
-               receiver.onCommandReceived(command);
-            }
+            recieveCommand(command);
          }
       }
    }
