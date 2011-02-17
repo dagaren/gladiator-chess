@@ -1870,7 +1870,7 @@ public class BitboardPosition extends AbstractPosition {
    
    public void generarMovements()
    {
-      long before = System.currentTimeMillis();
+      //long before = System.currentTimeMillis();
       
       movesList = new ArrayList<Movement>();
       captureMovesList = new ArrayList<Movement>();
@@ -3125,8 +3125,8 @@ public class BitboardPosition extends AbstractPosition {
       
       movesGenerated = true;
       
-      long despues = System.currentTimeMillis();
-      tiempoRecuperarMovements += despues - before;
+      //long despues = System.currentTimeMillis();
+      //tiempoRecuperarMovements += despues - before;
    }
    
 
@@ -3303,6 +3303,23 @@ public class BitboardPosition extends AbstractPosition {
    {
       // TODO Auto-generated method stub
       return false;
+   }
+   
+   public Square[] getPiecesSquares(Colour colour)
+   {
+      
+      long bbColour = bbColourOccupation[colour.index];
+      int numSquares = Long.bitCount(bbColour);
+      Square[] squares = new Square[numSquares];
+      for(int j = 0; j < numSquares; j++)
+      {
+         int squareIndex = Long.numberOfTrailingZeros(bbColour);
+         
+         squares[j] = Square.fromIndex(squareIndex);
+         
+         bbColour ^= bbSquare[squareIndex];
+      }
+      return squares;
    }
    
    public void setInitialPosition()

@@ -170,4 +170,9 @@ public enum Square
       else
          return Square.values()[index];
    }
+   
+   public Square mirror()
+   {
+      return Square.fromIndex((index + 56) - (((int)(index / 8)) * 16));
+   }
 }

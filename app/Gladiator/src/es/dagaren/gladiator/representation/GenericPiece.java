@@ -22,16 +22,17 @@ package es.dagaren.gladiator.representation;
  */
 public enum GenericPiece
 {
-   PAWN(0),
-   ROOK(1),
-   KNIGHT(2),
-   BISHOP(3),
-   QUEEN(4),
-   KING(5);
+   PAWN(0, 100),
+   ROOK(1, 500),
+   KNIGHT(2, 300),
+   BISHOP(3, 300),
+   QUEEN(4, 900),
+   KING(5, 1000);
    
    public int index;
+   public int value;
    
-   private GenericPiece(int index){
+   private GenericPiece(int index, int value){
       this.index = index;
    }
 }

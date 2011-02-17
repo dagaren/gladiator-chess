@@ -17,8 +17,10 @@
 package es.dagaren.gladiator.evaluation;
 
 import es.dagaren.gladiator.representation.Colour;
+import es.dagaren.gladiator.representation.GenericPiece;
 import es.dagaren.gladiator.representation.Piece;
 import es.dagaren.gladiator.representation.Position;
+import es.dagaren.gladiator.representation.Square;
 
 /**
  * @author dagaren
@@ -33,6 +35,83 @@ public class Evaluator
    public int ROOK_SCORE   = 500;
    public int QUEEN_SCORE  = 900;
    
+   public final int[] pawnPieceSquare = {  
+         0,   0,   0,   0,   0,   0,   0,   0,
+         5,  10,  10, -20, -20,  10,  10,  10,
+         5,  -5, -10,   0,   0, -10,  -5,   5,
+         0,   0,   0,  20,  20,   0,   0,   0,
+         5,   5,  10,  25,  25,  10,   5,   5,
+        10,  10,  20,  30,  30,  20,  10,  10,
+        50,  50,  50,  50,  50,  50,  50,  50,
+         0,   0,   0,   0,   0,   0,   0,   0
+                                        };
+   
+   public final int[] knightPieceSquare = {  
+       -50, -40, -30, -30, -30, -30, -40, -50,
+       -40, -20,   0,   0,   0,   0, -20, -40,
+       -30,   0,  10,  15,  15,  10,   0, -30,
+       -30,   5,  15,  20,  20,  15,   5, -30,
+       -30,   5,  15,  20,  20,  15,   5, -30,
+       -30,   0,  10,  15,  15,  10,   0, -30,
+       -40, -20,   0,   0,   0,   0, -20, -40,
+       -50, -40, -30, -30, -30, -30, -40, -50
+                                        };
+   
+   public final int[] bishopPieceSquare = {  
+       -20, -10, -10, -10, -10, -10, -10, -20,
+       -10,   5,   0,   0,   0,   0,   5, -10,
+       -10,  10,  10,  10,  10,  10,  10, -10,
+       -10,   0,  10,  10,  10,  10,   0, -10,
+       -10,   5,   5,  10,  10,   5,   5, -10,
+       -10,   0,   5,  10,  10,   5,   0, -10,
+       -10,   0,   0,   0,   0,   0,   0, -10,
+       -20, -10, -10, -10, -10, -10, -10, -20
+                                        };
+   
+   public final int[] rookPieceSquare = {  
+         0,   0,   0,   5,   5,   0,   0,   0,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+         5,  10,  10,  10,  10,  10,  10,   5,
+         0,   0,   0,   0,   0,   0,   0,   0
+                                          };
+   
+   public final int[] queenPieceSquare = {  
+       -20, -10, -10,  -5,  -5, -10, -10, -20,
+       -10,   0,   5,   0,   0,   0,   0, -10,
+       -10,   5,   5,   5,   5,   5,   0, -10,
+         0,   0,   5,   5,   5,   5,   0,  -5,
+        -5,   0,   5,   5,   5,   5,   0,  -5,
+       -10,   0,   5,   5,   5,   5,   0, -10,
+       -10,   0,   0,   0,   0,   0,   0, -10,
+       -20, -10, -10,  -5,  -5, -10, -10, -20
+                                          };
+   
+   public final int[] kingPieceSquare = {  
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -20, -30, -30, -40, -40, -30, -30, -20,
+         -10, -20, -20, -20, -20, -20, -20, -10,
+          20,  20,   0,   0,   0,   0,  10,  20,
+          20,  30,  10,   0,   0,  10,  30,  20
+                                            };
+   
+   public final int[] endKingPieceSquare = {  
+         -50, -30, -30, -30, -30, -30, -30, -50,
+         -30, -30,   0,   0,   0,   0, -30, -30,
+         -30, -10, -20,  30,  30,  20, -10, -30,
+         -30, -10,  30,  40,  40,  30, -10, -30,
+         -30, -10,  30,  40,  40,  30, -10, -30,
+         -30, -10,  20,  30,  30,  20, -10, -30,
+         -30, -20, -10,   0,   0, -10, -20, -30,
+         -50, -40, -30, -20, -20, -30, -40, -50
+                                            };
+   
    
    public int evaluate(Position position)
    {
@@ -40,7 +119,8 @@ public class Evaluator
       int score = 0;
       
       score += evaluateMaterial(position);
-      score += 0.5 * evaluateMobility(position);
+      score += 0.2 * evaluateMobility(position);
+      score += evaluatePieceSquareTables(position);
       
       if(turn == Colour.WHITE)
          return score;
@@ -80,10 +160,62 @@ public class Evaluator
    
    private int evaluatePieceSquareTables(Position position)
    {
-      //TODO implementar
       int score = 0;
+      
+      Square[] whitePieces = position.getPiecesSquares(Colour.WHITE);
+      for(Square s: whitePieces)
+      {
+         GenericPiece p = position.getPieceInSquare(s).genericPiece;
+         switch(p)
+         {
+            case PAWN:
+               score += pawnPieceSquare[s.index];
+               break;
+            case KNIGHT:
+               score += knightPieceSquare[s.index];
+               break;
+            case BISHOP:
+               score += bishopPieceSquare[s.index];
+               break;
+            case ROOK:
+               score += rookPieceSquare[s.index];
+               break;
+            case QUEEN:
+               score += queenPieceSquare[s.index];
+               break;
+            case KING:
+               score += kingPieceSquare[s.index];
+               break;
+         }
+      }
+      
+      Square[] blackPieces = position.getPiecesSquares(Colour.BLACK);
+      for(Square s: blackPieces)
+      {
+         GenericPiece p = position.getPieceInSquare(s).genericPiece;
+         switch(p)
+         {
+            case PAWN:
+               score -= pawnPieceSquare[s.mirror().index];
+               break;
+            case KNIGHT:
+               score -= knightPieceSquare[s.mirror().index];
+               break;
+            case BISHOP:
+               score -= bishopPieceSquare[s.mirror().index];
+               break;
+            case ROOK:
+               score -= rookPieceSquare[s.mirror().index];
+               break;
+            case QUEEN:
+               score -= queenPieceSquare[s.mirror().index];
+               break;
+            case KING:
+               score -= kingPieceSquare[s.mirror().index];
+               break;
+         }
+      }
       
       return score;
    }
-   
 }

@@ -618,7 +618,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    {
       String sinfo = "";
       
-      sinfo += info.deep;
+      sinfo += info.depth;
       sinfo += " ";
       sinfo += info.score;
       sinfo += " ";

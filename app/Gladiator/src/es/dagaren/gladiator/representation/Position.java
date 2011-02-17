@@ -74,6 +74,8 @@ public interface Position {
    public int getNumPieces(GenericPiece gp, Colour col);
    public int getNumPieces(Piece pie);
    
+   public Square[] getPiecesSquares(Colour colour);
+   
    public Piece getPieceInSquare(Square sq);
    public GenericPiece getGenericPieceInSquare(Square sq);
    public Colour getPieceColour(Square sq);
