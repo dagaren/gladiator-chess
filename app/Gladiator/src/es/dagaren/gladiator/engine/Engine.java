@@ -76,6 +76,7 @@ public class Engine implements SearcherObserver
    public void setDepthLimit(int depthLimit)
    {
       this.depthLimit = depthLimit;
+      this.searcher.setDepthLimit(depthLimit);
    }
    
    public Position getPosition()

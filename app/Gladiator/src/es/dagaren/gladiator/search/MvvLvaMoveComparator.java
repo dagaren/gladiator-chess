@@ -16,19 +16,40 @@
  */
 package es.dagaren.gladiator.search;
 
-import java.util.LinkedList;
+import java.util.Comparator;
 
+import es.dagaren.gladiator.notation.Notation;
 import es.dagaren.gladiator.representation.Movement;
 
 /**
  * @author dagaren
  *
  */
-public class SearchInfo
+public class MvvLvaMoveComparator implements Comparator<Movement>
 {
-   public long depth = 0;
-   public long score = 0;
-   public long time = 0;
-   public long nodes = 0;
-   public LinkedList<Movement> principalVariation = null;
+
+   /* (non-Javadoc)
+    * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+    */
+   @Override
+   public int compare(Movement m1, Movement m2)
+   {
+      int m1val = 0;
+      if(!m1.isInPassant())
+      {
+         m1val = m1.getDestinationPiece().genericPiece.value 
+         - m1.getSourcePiece().genericPiece.value;
+      }
+         
+      int m2val = 0 ;
+      if(!m2.isInPassant())
+      {
+         m2val = m2.getDestinationPiece().genericPiece.value 
+         - m2.getSourcePiece().genericPiece.value;
+      }
+      
+      
+      return m1val - m2val;
+   }
+   
 }

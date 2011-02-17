@@ -17,6 +17,7 @@
 package es.dagaren.gladiator.search;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import es.dagaren.gladiator.evaluation.Evaluator;
 import es.dagaren.gladiator.representation.Movement;
@@ -28,29 +29,40 @@ import es.dagaren.gladiator.representation.Position;
  */
 public class Searcher implements Runnable
 {
-   protected int deepLimit;
+   /* Variables de límites de la búsqueda */
+   //Profundidad límite
+   protected int depthLimit;
+   //Tiempo límite
    protected long timeLimit;
+   //Número de nodos límite
    protected long nodesLimit;
    
+   //Tiempo de inicio de la búsqueda
    protected long initTime = 0;
-   
-   protected long visitedNodes;
-   protected long cutoffs;
    
    protected volatile boolean search;
    protected volatile boolean exit;
+  
    
-   protected int bestScore;
-   protected int deep;
-   
+   //La variante principal
    protected LinkedList<Movement> principalVariation;
    
+   //El hilo dedicado a las búsquedas
    protected Thread thread;
    
+   //La posición de búsqueda
    protected Position position;
    
+   //El evaluador de posiciones estáticas
    protected Evaluator evaluator;
    
+   //Variables de recolección de estadísticas
+   //Nodos visitados en la búsqueda
+   protected long visitedNodes;
+   protected long cutoffs;
+   
+   
+   //Constantes
    protected final int DRAW_SCORE = 0;
    protected final int CHECKMATE_SCORE = -10000;
    
@@ -61,7 +73,7 @@ public class Searcher implements Runnable
    
    public Searcher()
    {
-      deepLimit = 4;
+      depthLimit = 4;
       timeLimit = -1;
       nodesLimit = -1;
       
@@ -136,24 +148,21 @@ public class Searcher implements Runnable
       }
    }
    
-   protected void publishInfo()
+   protected void publishInfo(long time, long nodes, long depth, long score, LinkedList<Movement> principalVariation)
    {
-      long time = System.currentTimeMillis();
-      
       SearchInfo info = new SearchInfo();
-      info.time = (time - initTime) / 10;
-      info.principalVariation = this.principalVariation;
-      info.nodes = this.visitedNodes;
-      info.deep = this.deep;
-      info.score = this.bestScore;
+      info.time = time; // (time - initTime) / 10;
+      info.principalVariation = principalVariation;
+      info.nodes = nodes;
+      info.depth = depth;
+      info.score = score;
       
       if(observer != null)
          observer.onInformationPublished(info);
    }
    
    public void search()
-   {
-      
+   {  
    }
    
    public synchronized void stop()
@@ -161,14 +170,14 @@ public class Searcher implements Runnable
       search = false;
    }
 
-   public int getDeepLimit()
+   public int getDepthLimit()
    {
-      return deepLimit;
+      return depthLimit;
    }
 
-   public void setDeepLimit(int deepLimit)
+   public void setDepthLimit(int depthLimit)
    {
-      this.deepLimit = deepLimit;
+      this.depthLimit = depthLimit;
    }
 
    public long getTimeLimit()
@@ -189,36 +198,6 @@ public class Searcher implements Runnable
    public void setNodesLimit(long nodesLimit)
    {
       this.nodesLimit = nodesLimit;
-   }
-
-   public long getCutoffs()
-   {
-      return cutoffs;
-   }
-
-   public void setCutoffs(long cutoffs)
-   {
-      this.cutoffs = cutoffs;
-   }
-
-   public int getBestScore()
-   {
-      return bestScore;
-   }
-
-   public void setBestScore(int bestScore)
-   {
-      this.bestScore = bestScore;
-   }
-
-   public int getDeep()
-   {
-      return deep;
-   }
-
-   public void setDeep(int deep)
-   {
-      this.deep = deep;
    }
 
    public LinkedList<Movement> getPrincipalVariation()
