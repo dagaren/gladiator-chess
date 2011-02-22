@@ -40,6 +40,9 @@ public class AlphaBetaSearcher extends Searcher
    protected final int INITIAL_ALFA = -10000 - 1;
    protected final int INITIAL_BETA =  10000 + 1;
    
+   //Arrays de movimientos killer;
+   protected Movement[][] killerMoves = new Movement[this.depthLimit][2];
+   
    //Comparador MVV LVA
    protected Comparator<Movement> mvvLvaComparator = new MvvLvaMoveComparator();
    
@@ -111,7 +114,7 @@ public class AlphaBetaSearcher extends Searcher
       }
    }
    
-   public int alphaBeta(Position position, int currentDeep, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
+   public int alphaBeta(Position position, int currentDepth, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
    {
       Colour turn = position.getTurn();
       
@@ -154,14 +157,14 @@ public class AlphaBetaSearcher extends Searcher
       //Si se ha llegado a la máxima profundidad
       //Se devuelve una búsqueda quiescence
       //para evitar el efecto horizonte
-      if(currentDeep == 0)
+      if(currentDepth == 0)
       {
          return alphaBetaQuiescence(position, 8, alpha, beta, parentPrincipalVariation);
       }
       
       
       //Se ordenan los movimientos
-      this.sortMoves(moves, position);
+      this.sortMoves(moves, position, currentDepth);
       
       //Se itera a través de cada movimiento y se realiza
       //la búsqueda en las posiciones que resultan
@@ -175,7 +178,7 @@ public class AlphaBetaSearcher extends Searcher
          position.doMove(move);
          
          //Se calcula la evaluación del movimiento
-         int score = - alphaBeta(position, currentDeep - 1, -beta, -alpha, currentPrincipalVariation);
+         int score = - alphaBeta(position, currentDepth - 1, -beta, -alpha, currentPrincipalVariation);
       
          //Se deshace el movimiento
          position.undoMove(move);
@@ -196,6 +199,14 @@ public class AlphaBetaSearcher extends Searcher
             //se produce un corte
             cutoffs++;
             
+            //Se añade el movimiento como movimiento 'killer para la profundidad'
+            if(!move.equals(killerMoves[currentDepth - 1][0]) && !move.equals(killerMoves[currentDepth - 1][1]))
+            {
+               killerMoves[currentDepth - 1][1] = killerMoves[currentDepth - 1][0];
+               killerMoves[currentDepth - 1][0] = move;
+            }
+            ///////
+            
             parentPrincipalVariation.clear();
             
             return beta;
@@ -212,7 +223,7 @@ public class AlphaBetaSearcher extends Searcher
             parentPrincipalVariation.add(move);
             parentPrincipalVariation.addAll(currentPrincipalVariation);
             
-            if(currentDeep == depth)
+            if(currentDepth == depth)
             {
                if(turn == Colour.WHITE)
                   bestScore = score;
@@ -228,7 +239,7 @@ public class AlphaBetaSearcher extends Searcher
       return alpha;
    }
    
-   public int alphaBetaQuiescence(Position position, int currentDeep, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
+   public int alphaBetaQuiescence(Position position, int currentDepth, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
    {
       Colour turn = position.getTurn();
       
@@ -305,7 +316,7 @@ public class AlphaBetaSearcher extends Searcher
          position.doMove(move);
       
          //Se calcula la puntuación del movimiento
-         score = - alphaBetaQuiescence(position, currentDeep - 1, -beta, -alpha, currentPrincipalVariation);
+         score = - alphaBetaQuiescence(position, currentDepth - 1, -beta, -alpha, currentPrincipalVariation);
          
          //Tras evaluar el movimiento se deshace
          position.undoMove(move);
@@ -346,9 +357,10 @@ public class AlphaBetaSearcher extends Searcher
    }
    
    
-   public void sortMoves(List<Movement> moves, Position position)
+   public void sortMoves(List<Movement> moves, Position position, int currentDepth)
    {
       //Se ordenan si acaso vale la variante principal de la iteración anterior
+      
       if(iterationNodes < depth)
       {
          List<Movement> im = principalVariations.get(depth - 1);
@@ -361,7 +373,26 @@ public class AlphaBetaSearcher extends Searcher
             moves.add(0, m);
          }
       }
+      
       //////////////////////////
+      
+      //Se ordenan por killer moves
+      Movement m = null;
+      if(moves.contains(killerMoves[currentDepth - 1][0]))
+      {
+         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth - 1][0]));
+         //System.err.println("===> Se ordena un movimiento killer 0 en pronfundidad " + currentDepth + " : " + Notation.toString(m));         
+         moves.add(0, m);
+      }
+      if(moves.contains(killerMoves[currentDepth - 1][1]))
+      {
+ 
+         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth - 1][1]));
+         //System.err.println("===> Se ordena un movimiento killer 1 en pronfundidad " + currentDepth + " : " + Notation.toString(m)); 
+         moves.add(0, m);
+      }
+      ///////////////////////////////
+      
    }
    
    public void sortQuiescenceMoves(List<Movement> moves, Position position)

@@ -147,6 +147,8 @@ public class Movement
    
    public boolean equals(Object m)
    {
+      if(m == null) return false;
+      
       Movement mov = (Movement)m;
       
       if(this.sourceSquare != mov.sourceSquare)
