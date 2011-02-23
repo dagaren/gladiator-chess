@@ -34,5 +34,6 @@ public enum GenericPiece
    
    private GenericPiece(int index, int value){
       this.index = index;
+      this.value = value;
    }
 }

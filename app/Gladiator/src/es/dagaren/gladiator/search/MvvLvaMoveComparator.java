@@ -48,8 +48,8 @@ public class MvvLvaMoveComparator implements Comparator<Movement>
          - m2.getSourcePiece().genericPiece.value;
       }
       
-      
-      return m1val - m2val;
+      //System.err.println(":" + m1val + ":" + m2val);
+      return m2val - m1val;
    }
    
 }

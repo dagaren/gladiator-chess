@@ -94,8 +94,8 @@ public class AlphaBetaSearcher extends Searcher
          
          System.err.println("Estadísticas búsquedas en profundidad " + depth + ":");
          System.err.println("------------------------------------------");
-         System.err.println(" * Nodos recorridos: " + nodes);
-         System.err.println(" * Nodos quiescende recorridos: " + qnodes);
+         System.err.println(" * Nodos recorridos: " + nodes + "(" + ((100 * nodes) / (nodes + qnodes)) + "%)");
+         System.err.println(" * Nodos quiescende recorridos: " + qnodes + "(" + ((100 * qnodes) / (nodes + qnodes)) + "%)");
          System.err.println(" * Cortes producidos: " + cutoffs);
          System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime)/1000));
          if(principalVariation.size() > 0)
@@ -360,7 +360,7 @@ public class AlphaBetaSearcher extends Searcher
    public void sortMoves(List<Movement> moves, Position position, int currentDepth)
    {
       //Se ordenan si acaso vale la variante principal de la iteración anterior
-      
+      /*
       if(iterationNodes < depth)
       {
          List<Movement> im = principalVariations.get(depth - 1);
@@ -373,7 +373,7 @@ public class AlphaBetaSearcher extends Searcher
             moves.add(0, m);
          }
       }
-      
+      */
       //////////////////////////
       
       //Se ordenan por killer moves
