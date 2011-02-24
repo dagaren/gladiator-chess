@@ -542,7 +542,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
                "sigterm=0 " +
                "reuse=1 " +
                "analyze=0 " +
-               "myname=\"Gladiator (v0.0.1)\" " +
+               "myname=\"" + engine.getName() + " (v" + engine.getVersion() + ")\"" +
                "variants=\"normal\" " +
                "colors=0 " +
                "ics=0 " +

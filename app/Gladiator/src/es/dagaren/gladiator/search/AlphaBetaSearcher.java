@@ -56,6 +56,8 @@ public class AlphaBetaSearcher extends Searcher
    //Variables de estadísticas
    //Número de cortes producidos
    protected int cutoffs = 0;
+   //Número de cortes producidos en nodos quiescence
+   protected int qcutoffs = 0;
    //Número de nodos recorridos en búsqueda normal
    protected int nodes = 0;
    //Número de nodos recorridos en búsqueda quiescence
@@ -70,6 +72,7 @@ public class AlphaBetaSearcher extends Searcher
       
       visitedNodes = 0;
       cutoffs = 0;
+      qcutoffs = 0;
       nodes = 0;
       qnodes = 0;
       
@@ -92,12 +95,17 @@ public class AlphaBetaSearcher extends Searcher
          
          principalVariation = currentPrincipalVariation;
          
+         int nodesPercent = (nodes + qnodes) > 0 ? ((100 * nodes) / (nodes + qnodes)) : 0;
+         int qnodesPercent = (nodes + qnodes) > 0 ? ((100 * qnodes) / (nodes + qnodes)) : 0;
+         int cutoffsPercent = (cutoffs + nodes) > 0 ? ((100 * cutoffs) / (cutoffs + nodes)) : 0;
+         int qcutoffsPercent = (qcutoffs + qnodes) > 0 ? ((100 * qcutoffs) / (qcutoffs + qnodes)) : 0;
          System.err.println("Estadísticas búsquedas en profundidad " + depth + ":");
          System.err.println("------------------------------------------");
-         System.err.println(" * Nodos recorridos: " + nodes + "(" + ((100 * nodes) / (nodes + qnodes)) + "%)");
-         System.err.println(" * Nodos quiescende recorridos: " + qnodes + "(" + ((100 * qnodes) / (nodes + qnodes)) + "%)");
-         System.err.println(" * Cortes producidos: " + cutoffs);
-         System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime)/1000));
+         System.err.println(" * Nodos recorridos: " + nodes + "(" + nodesPercent + "%)");
+         System.err.println(" * Nodos quiescende recorridos: " + qnodes + "(" + qnodesPercent + "%)");
+         System.err.println(" * Cortes producidos en nodos normales: " + cutoffs + "(" + cutoffsPercent  +"%)");
+         System.err.println(" * Cortes producidos en nodos quiescence: " + qcutoffs + "(" + qcutoffsPercent  +"%)");
+         System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime) / 1000));
          if(principalVariation.size() > 0)
             System.err.println(" * Mejor movimiento encontrado: " + Notation.toString(principalVariation.get(0)));
          System.err.print(" * VP: ");
@@ -334,7 +342,7 @@ public class AlphaBetaSearcher extends Searcher
          
          if(score >= beta)
          {
-            cutoffs++;
+            qcutoffs++;
             
             parentPrincipalVariation.clear();
             
@@ -398,5 +406,13 @@ public class AlphaBetaSearcher extends Searcher
    public void sortQuiescenceMoves(List<Movement> moves, Position position)
    {
       Collections.sort(moves, mvvLvaComparator);
+   }
+   
+   @Override
+   public void setDepthLimit(int depthLimit)
+   {
+      super.setDepthLimit(depthLimit);
+      
+      killerMoves = new Movement[this.depthLimit][2];
    }
 }

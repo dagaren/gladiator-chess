@@ -35,7 +35,7 @@ import es.dagaren.gladiator.search.SearcherObserver;
 public class Engine implements SearcherObserver
 {
    protected final String name    = "Gladiator";
-   protected final String version = "0.0.1";
+   protected final String version = "0.0.3";
    protected final String rating  = "(Unknown)";
    
    
@@ -277,5 +277,22 @@ public class Engine implements SearcherObserver
    public void setObserver(EngineObserver observer)
    {
       this.observer = observer;
+   }
+
+   
+   
+   public String getName()
+   {
+      return name;
+   }
+
+   public String getVersion()
+   {
+      return version;
+   }
+
+   public String getRating()
+   {
+      return rating;
    }
 }
