@@ -32,7 +32,7 @@ import es.dagaren.gladiator.notation.Notation;
 public class BitboardPosition extends AbstractPosition {
    
    public long tiempoRecuperarPeones = 0;
-   public long tiempoRecuperarMovements = 0;
+   public long tgiempoRecuperarMovements = 0;
    
    //Arrays de bitboards
    private static boolean isInitiated = false;
@@ -309,6 +309,12 @@ public class BitboardPosition extends AbstractPosition {
     */
    public static final long bbWhiteSquares = 0x55AA55AA55AA55AAL;
    
+   /**
+    * Array de 64 posiciones (una por cada casilla del tablero)
+    * de modo que el indice del array devuelve el Square correspondiente
+    * (hace lo mismo que Square.fromIndex(int indice), pero agiliza 
+    */
+   public static Square square[] = new Square[64];
    
    /**
     * Array de 64 posiciones (una por cada casilla del tablero)
@@ -464,6 +470,43 @@ public class BitboardPosition extends AbstractPosition {
    protected List<Movement> nonCaptureMovesList = null;
    protected List<Movement> promotionMovesList = null;
    
+   
+   /** CAMPOS DE FUNCIONES INTERNAS */
+   long bbPieceOccupation;
+   long bbTurnOccupied;
+   long bbOppositeOccupied;
+   int numPieces;
+   int numSquares;
+   int squareIndex;
+   int pieceSquareIndex;
+   int checkSquareIndex;
+   long bbAttacked;
+   long bbAttackedBefore;
+   long bbConnection;
+   int kingSquareIndex;
+   long bbKing;
+   long bbAttacker;
+   int attackerSquareIndex;
+   int attackedSquareIndex;
+   int numAttacked;
+   long bbAdvances;
+   long bbAttackers;
+   long bbKingAttackers;
+   int numAttackers;
+   boolean isPinned = false;
+   Piece piece;
+   Piece capture;
+   Movement mov;
+   long advances1;
+   long advances2;
+   GenericPiece genericPiece;
+   Piece squarePiece;
+   Piece capturePiece;
+   Square sourceSquare;
+   Square destinationSquare;
+   long bbEnPassantCapture;
+   /** FIN DE CAMPOS DE FUNCIONES INTERNAS */
+   
    /**
     * Constructor de BitBoard
     */
@@ -530,6 +573,12 @@ public class BitboardPosition extends AbstractPosition {
          f1 = f1 << 8;
          bbFile[i] = c1;
          c1 = c1 << 1;
+      }
+      
+      //Se inicia el array de mepeo de casillas por indice
+      for(int i = 0; i < 64; i++)
+      {
+         square[i] = Square.fromIndex(i);
       }
       
       //Se inicia el array de mapeo entre casillas y filas y columnas;
@@ -1860,9 +1909,9 @@ public class BitboardPosition extends AbstractPosition {
          generarMovements();
       }
       
-      movesList.clear();
-      movesList.addAll(captureMovesList);
-      movesList.addAll(nonCaptureMovesList);
+      //movesList.clear();
+      //movesList.addAll(captureMovesList);
+      //movesList.addAll(nonCaptureMovesList);
       
       
       return movesList;
@@ -1877,39 +1926,7 @@ public class BitboardPosition extends AbstractPosition {
       promotionMovesList = new ArrayList<Movement>();
       nonCaptureMovesList = new ArrayList<Movement>();
       
-      long bbPieceOccupation;
-      long bbTurnOccupied;
-      long bbOppositeOccupied;
-      int numPieces;
-      int numSquares;
-      int squareIndex;
-      int pieceSquareIndex;
-      int checkSquareIndex;
-      long bbAttacked;
-      long bbAttackedBefore;
-      long bbConnection;
-      int kingSquareIndex;
-      long bbKing;
-      long bbAttacker;
-      int attackerSquareIndex;
-      int attackedSquareIndex;
-      int numAttacked;
-      long bbAdvances;
-      long bbAttackers;
-      long bbKingAttackers;
-      int numAttackers;
-      boolean isPinned = false;
-      Piece piece;
-      Piece capture;
-      Movement mov;
-      long advances1;
-      long advances2;
-      GenericPiece genericPiece;
-      Piece squarePiece;
-      Piece capturePiece;
-      Square sourceSquare;
-      Square destinationSquare;
-      long bbEnPassantCapture;
+
       
       bbTurnOccupied = bbColourOccupation[turn.index];
       bbOppositeOccupied = bbColourOccupation[turn.opposite().index];
@@ -1960,8 +1977,8 @@ public class BitboardPosition extends AbstractPosition {
                if((bbAttackerToSquare[attackedSquareIndex] & bbColourOccupation[turn.opposite().index]) == 0)
                {
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
                   mov.setDestinationPiece(capture);
@@ -2040,8 +2057,8 @@ public class BitboardPosition extends AbstractPosition {
                {
                   squarePiece = pieceInSquare[pieceSquareIndex];
                   capturePiece = pieceInSquare[checkSquareIndex];
-                  sourceSquare = Square.fromIndex(pieceSquareIndex);
-                  destinationSquare = Square.fromIndex(checkSquareIndex);
+                  sourceSquare = square[pieceSquareIndex];
+                  destinationSquare = square[checkSquareIndex];
                   
                   if(squarePiece.genericPiece != GenericPiece.PAWN)
                   {
@@ -2174,8 +2191,8 @@ public class BitboardPosition extends AbstractPosition {
                   if(isPinned == false)
                   {
                      mov = new Movement();
-                     mov.setSource(Square.fromIndex(attackerSquareIndex));
-                     mov.setDestination(Square.fromIndex(squareIndex));
+                     mov.setSource(square[attackerSquareIndex]);
+                     mov.setDestination(square[squareIndex]);
                      mov.setSourcePiece(pieceInSquare[attackerSquareIndex]);
                            
                      movesList.add(mov);
@@ -2245,8 +2262,8 @@ public class BitboardPosition extends AbstractPosition {
                      if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                      {
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.WHITE_PAWN);
                      
                         movesList.add(mov);
@@ -2255,32 +2272,32 @@ public class BitboardPosition extends AbstractPosition {
                      else
                      {
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.WHITE_PAWN);
                         mov.setPromotionPiece(Piece.WHITE_ROOK);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.WHITE_PAWN);
                         mov.setPromotionPiece(Piece.WHITE_KNIGHT);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.WHITE_PAWN);
                         mov.setPromotionPiece(Piece.WHITE_BISHOP);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.WHITE_PAWN);
                         mov.setPromotionPiece(Piece.WHITE_QUEEN);
                         movesList.add(mov);
@@ -2331,8 +2348,8 @@ public class BitboardPosition extends AbstractPosition {
                   if(isPinned == false)
                   {
                      mov = new Movement();
-                     mov.setSource(Square.fromIndex(pieceSquareIndex));
-                     mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                     mov.setSource(square[pieceSquareIndex]);
+                     mov.setDestination(square[attackedSquareIndex]);
                      mov.setSourcePiece(Piece.WHITE_PAWN);
                   
                      movesList.add(mov);
@@ -2392,8 +2409,8 @@ public class BitboardPosition extends AbstractPosition {
                      if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                      {
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.BLACK_PAWN);
                      
                         movesList.add(mov);
@@ -2402,32 +2419,32 @@ public class BitboardPosition extends AbstractPosition {
                      else
                      {
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.BLACK_PAWN);
                         mov.setPromotionPiece(Piece.BLACK_ROOK);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.BLACK_PAWN);
                         mov.setPromotionPiece(Piece.BLACK_KNIGHT);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.BLACK_PAWN);
                         mov.setPromotionPiece(Piece.BLACK_BISHOP);
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
                         mov = new Movement();
-                        mov.setSource(Square.fromIndex(pieceSquareIndex));
-                        mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                        mov.setSource(square[pieceSquareIndex]);
+                        mov.setDestination(square[attackedSquareIndex]);
                         mov.setSourcePiece(Piece.BLACK_PAWN);
                         mov.setPromotionPiece(Piece.BLACK_QUEEN);
                         movesList.add(mov);
@@ -2477,8 +2494,8 @@ public class BitboardPosition extends AbstractPosition {
                   if(isPinned == false)
                   {
                      mov = new Movement();
-                     mov.setSource(Square.fromIndex(pieceSquareIndex));
-                     mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                     mov.setSource(square[pieceSquareIndex]);
+                     mov.setDestination(square[attackedSquareIndex]);
                      mov.setSourcePiece(Piece.BLACK_PAWN);
                   
                      movesList.add(mov);
@@ -2553,8 +2570,8 @@ public class BitboardPosition extends AbstractPosition {
                attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
                
                mov = new Movement();
-               mov.setSource(Square.fromIndex(pieceSquareIndex));
-               mov.setDestination(Square.fromIndex(attackedSquareIndex));
+               mov.setSource(square[pieceSquareIndex]);
+               mov.setDestination(square[attackedSquareIndex]);
                mov.setSourcePiece(piece);
                capture = pieceInSquare[attackedSquareIndex];
                mov.setDestinationPiece(capture);
@@ -2633,8 +2650,8 @@ public class BitboardPosition extends AbstractPosition {
                attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
                
                mov = new Movement();
-               mov.setSource(Square.fromIndex(pieceSquareIndex));
-               mov.setDestination(Square.fromIndex(attackedSquareIndex));
+               mov.setSource(square[pieceSquareIndex]);
+               mov.setDestination(square[attackedSquareIndex]);
                mov.setSourcePiece(piece);
                capture = pieceInSquare[attackedSquareIndex];
                mov.setDestinationPiece(capture);
@@ -2714,8 +2731,8 @@ public class BitboardPosition extends AbstractPosition {
                attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
                
                mov = new Movement();
-               mov.setSource(Square.fromIndex(pieceSquareIndex));
-               mov.setDestination(Square.fromIndex(attackedSquareIndex));
+               mov.setSource(square[pieceSquareIndex]);
+               mov.setDestination(square[attackedSquareIndex]);
                mov.setSourcePiece(piece);
                capture = pieceInSquare[attackedSquareIndex];
                mov.setDestinationPiece(capture);
@@ -2795,8 +2812,8 @@ public class BitboardPosition extends AbstractPosition {
                attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
                
                mov = new Movement();
-               mov.setSource(Square.fromIndex(pieceSquareIndex));
-               mov.setDestination(Square.fromIndex(attackedSquareIndex));
+               mov.setSource(square[pieceSquareIndex]);
+               mov.setDestination(square[attackedSquareIndex]);
                mov.setSourcePiece(piece);
                capture = pieceInSquare[attackedSquareIndex];
                mov.setDestinationPiece(capture);
@@ -2842,8 +2859,8 @@ public class BitboardPosition extends AbstractPosition {
                if((bbAttackerToSquare[attackedSquareIndex] & bbColourOccupation[turn.opposite().index]) == 0)
                {
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
                   mov.setDestinationPiece(capture);
@@ -2884,6 +2901,7 @@ public class BitboardPosition extends AbstractPosition {
                if(!attacked)
                {
                   Movement shortCastlingMove = Movement.getMovementEnroqueCorto(turn);
+                  movesList.add(shortCastlingMove);
                   nonCaptureMovesList.add(shortCastlingMove);
                }
             }
@@ -2907,6 +2925,7 @@ public class BitboardPosition extends AbstractPosition {
                if(!attacked)
                {
                   Movement longCastlingMove = Movement.getMovementEnroqueLargo(turn);
+                  movesList.add(longCastlingMove);
                   nonCaptureMovesList.add(longCastlingMove);
                }
             }
@@ -2987,7 +3006,7 @@ public class BitboardPosition extends AbstractPosition {
 
                if(bbEnPassantCapture != 0 && 
                      ((bbAttacked & bbSquare[enPassantSquare.index]) != 0) &&
-                     (Square.fromIndex(kingSquareIndex).getRank() == enPassantSquareSource[enPassantSquare.index].getRank()))
+                     (square[kingSquareIndex].getRank() == enPassantSquareSource[enPassantSquare.index].getRank()))
                {BitboardUtils.printInConsole(bbAttacked);
                   //Se comprueba si hay que eliminar la captura al paso debido a
                   //que resultaría en una posición de jaque
@@ -3022,8 +3041,8 @@ public class BitboardPosition extends AbstractPosition {
                if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                {
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
                   mov.setDestinationPiece(capture);
@@ -3048,8 +3067,8 @@ public class BitboardPosition extends AbstractPosition {
                else
                {
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   mov.setPromotionPiece(Piece.get(GenericPiece.ROOK,turn));
                   capture = pieceInSquare[attackedSquareIndex];
@@ -3065,8 +3084,8 @@ public class BitboardPosition extends AbstractPosition {
                   }
                   
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   mov.setPromotionPiece(Piece.get(GenericPiece.KNIGHT,turn));
                   mov.setDestinationPiece(capture);
@@ -3081,8 +3100,8 @@ public class BitboardPosition extends AbstractPosition {
                   }
                   
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   mov.setPromotionPiece(Piece.get(GenericPiece.BISHOP,turn));
                   mov.setDestinationPiece(capture);
@@ -3097,8 +3116,8 @@ public class BitboardPosition extends AbstractPosition {
                   }
                   
                   mov = new Movement();
-                  mov.setSource(Square.fromIndex(pieceSquareIndex));
-                  mov.setDestination(Square.fromIndex(attackedSquareIndex));
+                  mov.setSource(square[pieceSquareIndex]);
+                  mov.setDestination(square[attackedSquareIndex]);
                   mov.setSourcePiece(piece);
                   mov.setPromotionPiece(Piece.get(GenericPiece.QUEEN,turn));
                   mov.setDestinationPiece(capture);
@@ -3315,7 +3334,7 @@ public class BitboardPosition extends AbstractPosition {
       {
          int squareIndex = Long.numberOfTrailingZeros(bbColour);
          
-         squares[j] = Square.fromIndex(squareIndex);
+         squares[j] = square[squareIndex];
          
          bbColour ^= bbSquare[squareIndex];
       }
