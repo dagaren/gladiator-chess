@@ -16,30 +16,67 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author dagaren
  *
  */
-public enum File
+public class File
 {
-   a(0),
-   b(1),
-   c(2),
-   d(3),
-   e(4),
-   f(5),
-   g(6),
-   h(7);
+   public static final File a = new File(0, "a");
+   public static final File b = new File(1, "b");
+   public static final File c = new File(2, "c");
+   public static final File d = new File(3, "d");
+   public static final File e = new File(4, "e");
+   public static final File f = new File(5, "f");
+   public static final File g = new File(6, "g");
+   public static final File h = new File(7, "h");
+   
    
    public int index;
    
-   File(int index)
+   protected static File[] files;
+   protected static String[] filesNames;
+   protected static Map<String, File> filesMap;
+   
+   private File(int index , String name)
    {
       this.index = index;
+      
+      if(files == null)
+      {
+         files = new File[8];
+         filesNames = new String[8];
+         filesMap = new HashMap<String, File>();
+      }
+      
+      files[index] = this;
+      filesNames[index] = name;
+      filesMap.put(name, this);
    }
    
    public static File fromIndex(int index)
    {
-      return File.values()[index];
+      return files[index];
+   }
+   
+   public static File valueOf(String name)
+   {
+      if(filesMap.containsKey(name))
+         return filesMap.get(name);
+      else
+         return null;
+   }
+   
+   public String name()
+   {
+      return filesNames[this.index];
+   }
+   
+   public String toString()
+   {
+      return name();
    }
 }

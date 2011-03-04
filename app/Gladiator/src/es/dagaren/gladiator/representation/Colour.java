@@ -16,20 +16,39 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author dagaren
  *
  */
-public enum Colour
+public class Colour
 {
-   WHITE(0),
-   BLACK(1);
+   
+   public static final Colour WHITE = new Colour(0, "WHITE");
+   public static final Colour BLACK = new Colour(1, "BLACK");
    
    public int index;
    
-   private Colour(int index)
+   protected static Colour[] colours;
+   protected static String[] coloursNames;
+   protected static Map<String, Colour> coloursMap;
+   
+   private Colour(int index, String name)
    {
       this.index = index;
+      
+      if(colours == null)
+      {
+         colours = new Colour[2];
+         coloursNames = new String[2];
+         coloursMap = new HashMap<String, Colour>();
+      }
+      
+      colours[index] = this;
+      coloursNames[index] = name;
+      coloursMap.put(name, this);
    }
    
    public Colour opposite(){
@@ -37,6 +56,24 @@ public enum Colour
          return Colour.BLACK;
       else
          return Colour.WHITE;
+   }
+   
+   public static Colour valueOf(String name)
+   {
+      if(coloursMap.containsKey(name))
+         return coloursMap.get(name);
+      else
+         return null;
+   }
+   
+   public String name()
+   {
+      return coloursNames[this.index];
+   }
+   
+   public String toString()
+   {
+      return name();
    }
 
 }

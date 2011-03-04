@@ -16,46 +16,64 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author dagaren
  *
  */
-public enum Piece
-{
-   WHITE_PAWN(0, GenericPiece.PAWN, Colour.WHITE),
-   BLACK_PAWN(1, GenericPiece.PAWN, Colour.BLACK),
-   WHITE_ROOK(2, GenericPiece.ROOK, Colour.WHITE),
-   BLACK_ROOK(3, GenericPiece.ROOK, Colour.BLACK),
-   WHITE_KNIGHT(4, GenericPiece.KNIGHT, Colour.WHITE),
-   BLACK_KNIGHT(5, GenericPiece.KNIGHT, Colour.BLACK),
-   WHITE_BISHOP(6, GenericPiece.BISHOP, Colour.WHITE),
-   BLACK_BISHOP(7, GenericPiece.BISHOP, Colour.BLACK),
-   WHITE_QUEEN(8, GenericPiece.QUEEN, Colour.WHITE),
-   BLACK_QUEEN(9, GenericPiece.QUEEN, Colour.BLACK),
-   WHITE_KING(10, GenericPiece.KING, Colour.WHITE),
-   BLACK_KING(11, GenericPiece.KING, Colour.BLACK);
+public class Piece
+{  
+   public static final Piece WHITE_PAWN = new Piece(0, GenericPiece.PAWN, Colour.WHITE, "WHITE_PAWN");
+   public static final Piece BLACK_PAWN = new Piece(1, GenericPiece.PAWN, Colour.BLACK, "BLACK_PAWN");
+   public static final Piece WHITE_ROOK = new Piece(2, GenericPiece.ROOK, Colour.WHITE, "WHITE_ROOK");
+   public static final Piece BLACK_ROOK = new Piece(3, GenericPiece.ROOK, Colour.BLACK, "BLACK_ROOK");
+   public static final Piece WHITE_KNIGHT = new Piece(4, GenericPiece.KNIGHT, Colour.WHITE, "WHITE_KNIGHT");
+   public static final Piece BLACK_KNIGHT = new Piece(5, GenericPiece.KNIGHT, Colour.BLACK, "BLACK_KNIGHT");
+   public static final Piece WHITE_BISHOP = new Piece(6, GenericPiece.BISHOP, Colour.WHITE, "WHITE_BISHOP");
+   public static final Piece BLACK_BISHOP = new Piece(7, GenericPiece.BISHOP, Colour.BLACK, "BLACK_BISHOP");
+   public static final Piece WHITE_QUEEN = new Piece(8, GenericPiece.QUEEN, Colour.WHITE, "WHITE_QUEEN");
+   public static final Piece BLACK_QUEEN = new Piece(9, GenericPiece.QUEEN, Colour.BLACK, "BLACK_QUEEN");
+   public static final Piece WHITE_KING = new Piece(10, GenericPiece.KING, Colour.WHITE, "WHITE_KING");
+   public static final Piece BLACK_KING = new Piece(11, GenericPiece.KING, Colour.BLACK, "BLACK_KING");
    
    public int index;
    public Colour colour;
    public GenericPiece genericPiece;
    
-   Piece(int index, GenericPiece gp, Colour c)
+   protected static Piece[] pieces;
+   protected static String[] piecesNames;
+   protected static Map<String, Piece> piecesMap;
+   protected static Piece[][] piecesTable;
+   
+   private Piece(int index, GenericPiece gp, Colour c, String name)
    {
       this.index = index;
       this.genericPiece = gp;
       this.colour = c;
-   }
-   
-   public static Piece get(GenericPiece f,Colour c){
-      //TODO cambiar implementacion para que lo devuelva sin realizar búsqueda
-      for(Piece pieza: values()){
-         if(pieza.genericPiece == f && pieza.colour == c)
-            return pieza;
+      
+      if(pieces == null)
+      {
+         pieces = new Piece[12];
+         piecesNames = new String[12];
+         piecesMap = new HashMap<String, Piece>();
+         piecesTable = new Piece[6][2];
       }
-      return null;
+      
+      pieces[index] = this;
+      piecesNames[index] = name;
+      piecesMap.put(name, this);
+      piecesTable[gp.index][c.index] = this;
    }
    
-   public String toFenString(){
+   public static Piece get(GenericPiece f,Colour c)
+   {
+      return piecesTable[f.index][c.index];
+   }
+   
+   public String toFenString()
+   {
       switch(index){
          case 0:
             return "P";
@@ -84,6 +102,24 @@ public enum Piece
          default:
             return "";  
       }
+   }
+   
+   public static Piece valueOf(String name)
+   {
+      if(piecesMap.containsKey(name))
+         return piecesMap.get(name);
+      else
+         return null;
+   }
+   
+   public String name()
+   {
+      return piecesNames[this.index];
+   }
+   
+   public String toString()
+   {
+      return name();
    }
    
 }

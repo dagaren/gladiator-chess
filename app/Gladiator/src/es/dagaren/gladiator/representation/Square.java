@@ -16,82 +16,103 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author dagaren
  *
  */
-public enum Square
+public class Square
 {
-   a1(0),
-   b1(1),
-   c1(2),
-   d1(3),
-   e1(4),
-   f1(5),
-   g1(6),
-   h1(7),
-   a2(8),
-   b2(9),
-   c2(10),
-   d2(11),
-   e2(12),
-   f2(13),
-   g2(14),
-   h2(15),
-   a3(16),
-   b3(17),
-   c3(18),
-   d3(19),
-   e3(20),
-   f3(21),
-   g3(22),
-   h3(23),
-   a4(24),
-   b4(25),
-   c4(26),
-   d4(27),
-   e4(28),
-   f4(29),
-   g4(30),
-   h4(31),
-   a5(32),
-   b5(33),
-   c5(34),
-   d5(35),
-   e5(36),
-   f5(37),
-   g5(38),
-   h5(39),
-   a6(40),
-   b6(41),
-   c6(42),
-   d6(43),
-   e6(44),
-   f6(45),
-   g6(46),
-   h6(47),
-   a7(48),
-   b7(49),
-   c7(50),
-   d7(51),
-   e7(52),
-   f7(53),
-   g7(54),
-   h7(55),
-   a8(56),
-   b8(57),
-   c8(58),
-   d8(59),
-   e8(60),
-   f8(61),
-   g8(62),
-   h8(63);
+   public static final Square a1 = new Square(0, "a1");
+   public static final Square b1 = new Square(1, "b1");
+   public static final Square c1 = new Square(2, "c1");
+   public static final Square d1 = new Square(3, "d1");
+   public static final Square e1 = new Square(4, "e1");
+   public static final Square f1 = new Square(5, "f1");
+   public static final Square g1 = new Square(6, "g1");
+   public static final Square h1 = new Square(7, "h1");
+   public static final Square a2 = new Square(8, "a2");
+   public static final Square b2 = new Square(9, "b2");
+   public static final Square c2 = new Square(10, "c2");
+   public static final Square d2 = new Square(11, "d2");
+   public static final Square e2 = new Square(12, "e2");
+   public static final Square f2 = new Square(13, "f2");
+   public static final Square g2 = new Square(14, "g2");
+   public static final Square h2 = new Square(15, "h2");
+   public static final Square a3 = new Square(16, "a3");
+   public static final Square b3 = new Square(17, "b3");
+   public static final Square c3 = new Square(18, "c3");
+   public static final Square d3 = new Square(19, "d3");
+   public static final Square e3 = new Square(20, "e3");
+   public static final Square f3 = new Square(21, "f3");
+   public static final Square g3 = new Square(22, "g3");
+   public static final Square h3 = new Square(23, "h3");
+   public static final Square a4 = new Square(24, "a4");
+   public static final Square b4 = new Square(25, "b4");
+   public static final Square c4 = new Square(26, "c4");
+   public static final Square d4 = new Square(27, "d4");
+   public static final Square e4 = new Square(28, "e4");
+   public static final Square f4 = new Square(29, "f4");
+   public static final Square g4 = new Square(30, "g4");
+   public static final Square h4 = new Square(31, "h4");
+   public static final Square a5 = new Square(32, "a5");
+   public static final Square b5 = new Square(33, "b5");
+   public static final Square c5 = new Square(34, "c5");
+   public static final Square d5 = new Square(35, "d5");
+   public static final Square e5 = new Square(36, "e5");
+   public static final Square f5 = new Square(37, "f5");
+   public static final Square g5 = new Square(38, "g5");
+   public static final Square h5 = new Square(39, "h5");
+   public static final Square a6 = new Square(40, "a6");
+   public static final Square b6 = new Square(41, "b6");
+   public static final Square c6 = new Square(42, "c6");
+   public static final Square d6 = new Square(43, "d6");
+   public static final Square e6 = new Square(44, "e6");
+   public static final Square f6 = new Square(45, "f6");
+   public static final Square g6 = new Square(46, "g6");
+   public static final Square h6 = new Square(47, "h6");
+   public static final Square a7 = new Square(48, "a7");
+   public static final Square b7 = new Square(49, "b7");
+   public static final Square c7 = new Square(50, "c7");
+   public static final Square d7 = new Square(51, "d7");
+   public static final Square e7 = new Square(52, "e7");
+   public static final Square f7 = new Square(53, "f7");
+   public static final Square g7 = new Square(54, "g7");
+   public static final Square h7 = new Square(55, "h7");
+   public static final Square a8 = new Square(56, "a8");
+   public static final Square b8 = new Square(57, "b8");
+   public static final Square c8 = new Square(58, "c8");
+   public static final Square d8 = new Square(59, "d8");
+   public static final Square e8 = new Square(60, "e8");
+   public static final Square f8 = new Square(61, "f8");
+   public static final Square g8 = new Square(62, "g8");
+   public static final Square h8 = new Square(63, "h8");
    
    public int index;
    
-   Square(int index)
+   protected static Square[] squares;
+   protected static Square[] squaresMirror;
+   protected static String[] squaresNames;
+   protected static Map<String, Square> squaresMap;
+   
+   private Square(int index, String name)
    {
       this.index = index;
+      
+      if(squares == null)
+      {
+         squares = new Square[64];
+         squaresMirror = new Square[64];
+         squaresNames = new String[64];
+         squaresMap = new HashMap<String, Square>();
+      }
+      
+      squares[index] = this;
+      squaresMirror[(index + 56) - (((int)(index / 8)) * 16)] = this;
+      squaresNames[index] = name;
+      squaresMap.put(name, this);
    }
    
    public Rank getRank()
@@ -157,22 +178,36 @@ public enum Square
    }
    
    
-   public static Square fromRankAndFile(int rank,int file){
-      if(rank > 7 || file > 7 || rank < 0 || file < 0)
-         return null;
-      else
-         return Square.values()[(8 * rank) + file];
+   public static Square fromRankAndFile(int rank,int file)
+   {
+      return squares[(8 * rank) + file];
    }
    
-   public static Square fromIndex(int index){
-      if(index < 0 || index > 63)
-         return null;
-      else
-         return Square.values()[index];
+   public static Square fromIndex(int index)
+   {
+      return squares[index];
    }
    
    public Square mirror()
    {
-      return Square.fromIndex((index + 56) - (((int)(index / 8)) * 16));
+      return squaresMirror[this.index];
+   }
+   
+   public static Square valueOf(String name)
+   {
+      if(squaresMap.containsKey(name))
+         return squaresMap.get(name);
+      else
+         return null;
+   }
+   
+   public String name()
+   {
+      return squaresNames[this.index];
+   }
+   
+   public String toString()
+   {
+      return name();
    }
 }

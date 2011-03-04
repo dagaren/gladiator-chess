@@ -166,54 +166,36 @@ public class Evaluator
       for(Square s: whitePieces)
       {
          GenericPiece p = position.getPieceInSquare(s).genericPiece;
-         switch(p)
-         {
-            case PAWN:
-               score += pawnPieceSquare[s.index];
-               break;
-            case KNIGHT:
-               score += knightPieceSquare[s.index];
-               break;
-            case BISHOP:
-               score += bishopPieceSquare[s.index];
-               break;
-            case ROOK:
-               score += rookPieceSquare[s.index];
-               break;
-            case QUEEN:
-               score += queenPieceSquare[s.index];
-               break;
-            case KING:
-               score += kingPieceSquare[s.index];
-               break;
-         }
+         if(p == GenericPiece.PAWN)
+            score += pawnPieceSquare[s.index];
+         else if(p == GenericPiece.KNIGHT)
+            score += knightPieceSquare[s.index];
+         else if(p == GenericPiece.BISHOP)
+            score += bishopPieceSquare[s.index];
+         else if(p == GenericPiece.ROOK)
+            score += rookPieceSquare[s.index];
+         else if(p == GenericPiece.QUEEN)
+            score += queenPieceSquare[s.index];
+         else if(p == GenericPiece.KING)
+            score += kingPieceSquare[s.index];
       }
       
       Square[] blackPieces = position.getPiecesSquares(Colour.BLACK);
       for(Square s: blackPieces)
       {
          GenericPiece p = position.getPieceInSquare(s).genericPiece;
-         switch(p)
-         {
-            case PAWN:
-               score -= pawnPieceSquare[s.mirror().index];
-               break;
-            case KNIGHT:
-               score -= knightPieceSquare[s.mirror().index];
-               break;
-            case BISHOP:
-               score -= bishopPieceSquare[s.mirror().index];
-               break;
-            case ROOK:
-               score -= rookPieceSquare[s.mirror().index];
-               break;
-            case QUEEN:
-               score -= queenPieceSquare[s.mirror().index];
-               break;
-            case KING:
-               score -= kingPieceSquare[s.mirror().index];
-               break;
-         }
+         if(p == GenericPiece.PAWN)
+            score -= pawnPieceSquare[s.mirror().index];
+         else if(p == GenericPiece.KNIGHT)
+            score -= knightPieceSquare[s.mirror().index];
+         else if(p == GenericPiece.BISHOP)
+            score -= bishopPieceSquare[s.mirror().index];
+         else if(p == GenericPiece.ROOK)
+            score -= rookPieceSquare[s.mirror().index];
+         else if(p == GenericPiece.QUEEN)
+            score += queenPieceSquare[s.mirror().index];
+         else if(p == GenericPiece.KING)
+            score += kingPieceSquare[s.mirror().index];
       }
       
       return score;

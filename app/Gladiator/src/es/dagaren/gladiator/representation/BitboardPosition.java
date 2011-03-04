@@ -505,6 +505,15 @@ public class BitboardPosition extends AbstractPosition {
    Square sourceSquare;
    Square destinationSquare;
    long bbEnPassantCapture;
+   
+   int uaNumPieces;
+   long uaBbOccupiedTemp; 
+   int uaSquareIndex;
+   long uaBbAttacked;
+   long uaBbAttackerSquare;
+   
+   int uatNumAtacked; 
+   int uatSquareIndex;
    /** FIN DE CAMPOS DE FUNCIONES INTERNAS */
    
    /**
@@ -562,8 +571,6 @@ public class BitboardPosition extends AbstractPosition {
     */
    public static void init()
    {
-      long ti = System.currentTimeMillis();
-      
       //Se inicializan los bitboards de filas y columnas
       long f1 = 0x00000000000000ffL;
       long c1 = 0x0101010101010101L;
@@ -1026,11 +1033,6 @@ public class BitboardPosition extends AbstractPosition {
             enPassantSquareDestination[s.index] = null;
          }    
       }
-      
-      long to = System.currentTimeMillis();
-      
-      //System.err.println("Tiempo de inicializacion de bitboards: " + (to - ti) +  " milisegundos");
-      
    } // Fin de iniciarlizar()
    
    /**
@@ -1068,212 +1070,9 @@ public class BitboardPosition extends AbstractPosition {
       
    } //Fin de actualizarOcupadas()
    
-   /**
-    * 
-    *
-    */
-   public void updateAttackedFrom()
-   {
-      int numPieces;
-      long bbOccupiedTemp; 
-      int squareIndex;
-      
-      //Se generan las casillas atacadas por el rey blanco
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KING.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente rey blanco
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);   
-         
-         bbAttackedFromSquare[squareIndex] |= bbKingAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de reyes blancos
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por el rey negro
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KING.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente rey negro
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         bbAttackedFromSquare[squareIndex] |= bbKingAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de reyes negros
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los caballos blancos
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KNIGHT.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente caballo blanco
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         bbAttackedFromSquare[squareIndex] |= bbKnightAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de caballos blancos
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los caballos negros
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KNIGHT.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente caballo negro
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         bbAttackedFromSquare[squareIndex] |= bbKnightAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de caballos negros
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por las torres blancas
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_ROOK.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra la siguiente torre blanca
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         bbAttackedFromSquare[squareIndex] |= getAttackedInRank(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInFile(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de torres blancas
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por las torres negras
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_ROOK.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra la siguiente torre negra
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en filas y columnas
-         bbAttackedFromSquare[squareIndex] |= getAttackedInRank(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInFile(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de torres negras
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por las reinas blancas
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_QUEEN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra la siguiente dama blanca
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en filas y columnas.
-         bbAttackedFromSquare[squareIndex] |= getAttackedInRank(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInFile(squareIndex);
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= getAttackedInMainDiagonal(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInSecondaryDiagonal(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de damas blancas
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por las reinas negras
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_QUEEN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra la siguiente dama negra
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en filas y columnas.
-         bbAttackedFromSquare[squareIndex] |= getAttackedInRank(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInFile(squareIndex);
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= getAttackedInMainDiagonal(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInSecondaryDiagonal(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de damas negras
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los alfiles blancos
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_BISHOP.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente alfil blanco
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= getAttackedInMainDiagonal(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInSecondaryDiagonal(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de alfiles blancos
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los alfiles negros
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_BISHOP.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente alfil engro
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= getAttackedInMainDiagonal(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= getAttackedInSecondaryDiagonal(squareIndex);
-         
-         //Se elimina la casilla procesada del bitboard temporal de alfiles negros
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los peones blancos (en diagonal)
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_PAWN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente peon blanco
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= bbWhitePawnAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de peones blancos
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-      
-      //Se generan las casillas atacadas por los peones negros (en diagonal)
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_PAWN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
-      {
-         //Se obtiene la casilla donde se encuentra el siguiente peon negro
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         
-         //Se generan las casillas atacadas en diagonal
-         bbAttackedFromSquare[squareIndex] |= bbBlackPawnAttack[squareIndex];
-         
-         //Se elimina la casilla procesada del bitboard temporal de peones negros
-         bbOccupiedTemp ^= bbSquare[squareIndex];
-      }
-   } //Fin de actualizarAtacadasDesde
-   
+
    public void updateAttackedFromFull()
-   {
-      int numPieces;
-      long bbOccupiedTemp; 
-      int squareIndex;
-      long bbAttacked;
-      long bbAttackerSquare;
-      
+   {  
       for(int i = 0; i < 64; i++)
       {
          bbAttackedFromSquare[i] = 0;
@@ -1282,220 +1081,220 @@ public class BitboardPosition extends AbstractPosition {
       
       
       //Se generan las casillas atacadas por el rey blanco
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KING.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KING.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
-         bbAttacked = bbKingAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbKingAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por el rey negro
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KING.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KING.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
-         bbAttacked = bbKingAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbKingAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los caballos blancos
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KNIGHT.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_KNIGHT.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
-         bbAttacked = bbKnightAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbKnightAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los caballos negros
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KNIGHT.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_KNIGHT.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
-         bbAttacked = bbKnightAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbKnightAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por las torres blancas
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_ROOK.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_ROOK.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en filas y columnas
-         bbAttacked = getAttackedInRank(squareIndex);
-         bbAttacked |= getAttackedInFile(squareIndex);
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = getAttackedInRank(uaSquareIndex);
+         uaBbAttacked |= getAttackedInFile(uaSquareIndex);
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por las torres negras
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_ROOK.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_ROOK.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en filas y columnas
-         bbAttacked = getAttackedInRank(squareIndex);
-         bbAttacked |= getAttackedInFile(squareIndex);
+         uaBbAttacked = getAttackedInRank(uaSquareIndex);
+         uaBbAttacked |= getAttackedInFile(uaSquareIndex);
          
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare, bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare, uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por las reinas blancas
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_QUEEN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_QUEEN.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en filas y columnas.
-         bbAttacked = getAttackedInRank(squareIndex);
-         bbAttacked |= getAttackedInFile(squareIndex);
+         uaBbAttacked = getAttackedInRank(uaSquareIndex);
+         uaBbAttacked |= getAttackedInFile(uaSquareIndex);
          //Se generan las casillas atacadas en diagonal
-         bbAttacked |= getAttackedInMainDiagonal(squareIndex);
-         bbAttacked |= getAttackedInSecondaryDiagonal(squareIndex);
+         uaBbAttacked |= getAttackedInMainDiagonal(uaSquareIndex);
+         uaBbAttacked |= getAttackedInSecondaryDiagonal(uaSquareIndex);
          
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por las reinas negras
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_QUEEN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_QUEEN.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en filas y columnas.
-         bbAttacked = getAttackedInRank(squareIndex);
-         bbAttacked |= getAttackedInFile(squareIndex);
+         uaBbAttacked = getAttackedInRank(uaSquareIndex);
+         uaBbAttacked |= getAttackedInFile(uaSquareIndex);
          //Se generan las casillas atacadas en diagonal
-         bbAttacked |= getAttackedInMainDiagonal(squareIndex);
-         bbAttacked |= getAttackedInSecondaryDiagonal(squareIndex);
+         uaBbAttacked |= getAttackedInMainDiagonal(uaSquareIndex);
+         uaBbAttacked |= getAttackedInSecondaryDiagonal(uaSquareIndex);
          
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los alfiles blancos
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_BISHOP.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_BISHOP.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en diagonal
-         bbAttacked = getAttackedInMainDiagonal(squareIndex);
-         bbAttacked |= getAttackedInSecondaryDiagonal(squareIndex);
+         uaBbAttacked = getAttackedInMainDiagonal(uaSquareIndex);
+         uaBbAttacked |= getAttackedInSecondaryDiagonal(uaSquareIndex);
          
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los alfiles negros
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_BISHOP.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_BISHOP.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en diagonal
-         bbAttacked = getAttackedInMainDiagonal(squareIndex);
-         bbAttacked |= getAttackedInSecondaryDiagonal(squareIndex);
+         uaBbAttacked = getAttackedInMainDiagonal(uaSquareIndex);
+         uaBbAttacked |= getAttackedInSecondaryDiagonal(uaSquareIndex);
          
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los peones blancos (en diagonal)
-      bbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_PAWN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.WHITE_PAWN.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en diagonal
-         bbAttacked = bbWhitePawnAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbWhitePawnAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
       
       //Se generan las casillas atacadas por los peones negros (en diagonal)
-      bbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_PAWN.index];
-      numPieces = Long.bitCount(bbOccupiedTemp);
-      for(int i = 0; i < numPieces; i++)
+      uaBbOccupiedTemp = bbPiecesOccupation[Piece.BLACK_PAWN.index];
+      uaNumPieces = Long.bitCount(uaBbOccupiedTemp);
+      for(int i = 0; i < uaNumPieces; i++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbOccupiedTemp);
-         bbAttackerSquare = bbSquare[squareIndex];
+         uaSquareIndex = Long.numberOfTrailingZeros(uaBbOccupiedTemp);
+         uaBbAttackerSquare = bbSquare[uaSquareIndex];
          
          //Se generan las casillas atacadas en diagonal
-         bbAttacked = bbBlackPawnAttack[squareIndex];
-         bbAttackedFromSquare[squareIndex] |= bbAttacked;
+         uaBbAttacked = bbBlackPawnAttack[uaSquareIndex];
+         bbAttackedFromSquare[uaSquareIndex] |= uaBbAttacked;
          
-         updateAttackingTo(bbAttackerSquare,bbAttacked);
+         updateAttackingTo(uaBbAttackerSquare,uaBbAttacked);
          
-         bbOccupiedTemp ^= bbAttackerSquare;
+         uaBbOccupiedTemp ^= uaBbAttackerSquare;
       }
    } //Fin de actualizarAtacadasDesdeAmpliado()
    
@@ -1507,17 +1306,14 @@ public class BitboardPosition extends AbstractPosition {
    private void updateAttackingTo(long bbAttacker, long bbAttacked)
    {
       //Se actualiza los bitboards de atacantes_de de las casillas que ataca el bitboard
-      int numAtacked; 
-      int squareIndex;
-      
-      numAtacked = Long.bitCount(bbAttacked);
-      for(int j = 0; j < numAtacked; j++)
+      uatNumAtacked = Long.bitCount(bbAttacked);
+      for(int j = 0; j < uatNumAtacked; j++)
       {
-         squareIndex = Long.numberOfTrailingZeros(bbAttacked);
+         uatSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
          
-         bbAttackerToSquare[squareIndex] |= bbAttacker; 
+         bbAttackerToSquare[uatSquareIndex] |= bbAttacker; 
          
-         bbAttacked ^= bbSquare[squareIndex];
+         bbAttacked ^= bbSquare[uatSquareIndex];
       }
    } //Fin de actualizarAtacantesDe(long bitboardAtacante, long atacadas)
    
@@ -1647,7 +1443,6 @@ public class BitboardPosition extends AbstractPosition {
          }
       }
       
-      //TODO implementar enroques.
       if(sp == Piece.WHITE_KING && ss == Square.e1)
       {
          if(ds == Square.g1)
@@ -3304,6 +3099,7 @@ public class BitboardPosition extends AbstractPosition {
    
    public Piece getPieceInSquare(Square casilla)
    {
+      //int i = (int)casilla + 1;
       return pieceInSquare[casilla.index];
    }
 

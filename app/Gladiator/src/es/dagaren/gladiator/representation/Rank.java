@@ -16,31 +16,66 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author dagaren
  *
  */
-public enum Rank
+public class Rank
 {
-   _1(0),
-   _2(1),
-   _3(2),
-   _4(3),
-   _5(4),
-   _6(5),
-   _7(6),
-   _8(7);
-   
+   public static final Rank _1 = new Rank(0, "_1");
+   public static final Rank _2 = new Rank(1, "_2");
+   public static final Rank _3 = new Rank(2, "_3");
+   public static final Rank _4 = new Rank(3, "_4");
+   public static final Rank _5 = new Rank(4, "_5");
+   public static final Rank _6 = new Rank(5, "_6");
+   public static final Rank _7 = new Rank(6, "_7");
+   public static final Rank _8 = new Rank(7, "_8");
    
    public int index = 0;
    
-   Rank(int index)
+   protected static Rank[] ranks;
+   protected static String[] ranksNames;
+   protected static Map<String, Rank> ranksMap;
+   
+   private Rank(int index, String name)
    {
       this.index = index;
+      
+      if(ranks == null)
+      {
+         ranks = new Rank[8];
+         ranksNames = new String[8];
+         ranksMap = new HashMap<String, Rank>();
+      }
+      
+      ranks[index] = this;
+      ranksNames[index] = name;
+      ranksMap.put(name, this);
    }
    
    public static Rank fromIndex(int index)
    {
-      return Rank.values()[index];
+      return ranks[index];
+   }
+   
+   public static Rank valueOf(String name)
+   {
+      if(ranksMap.containsKey(name))
+         return ranksMap.get(name);
+      else
+         return null;
+   }
+   
+   public String name()
+   {
+      return ranksNames[this.index];
+   }
+   
+   public String toString()
+   {
+      return name();
    }
 }
