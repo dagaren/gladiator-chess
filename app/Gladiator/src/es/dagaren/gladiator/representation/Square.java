@@ -110,19 +110,19 @@ public class Square
       }
       
       squares[index] = this;
-      squaresMirror[(index + 56) - (((int)(index / 8)) * 16)] = this;
+      squaresMirror[(index + 56) - ((index >>> 3) << 4)] = this;
       squaresNames[index] = name;
       squaresMap.put(name, this);
    }
    
    public Rank getRank()
    {
-      return Rank.fromIndex(index / 8);
+      return Rank.fromIndex(index >>> 3);
    }
    
    public File getFile()
    {
-      return File.fromIndex(index % 8);
+      return File.fromIndex(index & 7);
    }
    
    public Square getNext()
@@ -180,7 +180,7 @@ public class Square
    
    public static Square fromRankAndFile(int rank,int file)
    {
-      return squares[(8 * rank) + file];
+      return squares[(rank << 3) + file];
    }
    
    public static Square fromIndex(int index)

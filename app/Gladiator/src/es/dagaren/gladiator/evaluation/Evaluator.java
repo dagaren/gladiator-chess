@@ -28,6 +28,8 @@ import es.dagaren.gladiator.representation.Square;
  */
 public class Evaluator
 {
+   protected static java.util.Random random = new java.util.Random(System.currentTimeMillis());
+   
    //VALOR DE LAS PIEZAS
    public int PAWN_SCORE   = 100;
    public int KNIGHT_SCORE = 300;
@@ -122,6 +124,8 @@ public class Evaluator
       score += 0.2 * evaluateMobility(position);
       score += evaluatePieceSquareTables(position);
       
+      score += random.nextInt(10);
+      
       if(turn == Colour.WHITE)
          return score;
       else
@@ -193,9 +197,9 @@ public class Evaluator
          else if(p == GenericPiece.ROOK)
             score -= rookPieceSquare[s.mirror().index];
          else if(p == GenericPiece.QUEEN)
-            score += queenPieceSquare[s.mirror().index];
+            score -= queenPieceSquare[s.mirror().index];
          else if(p == GenericPiece.KING)
-            score += kingPieceSquare[s.mirror().index];
+            score -= kingPieceSquare[s.mirror().index];
       }
       
       return score;

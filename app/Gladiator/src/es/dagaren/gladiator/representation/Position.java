@@ -17,6 +17,7 @@
 package es.dagaren.gladiator.representation;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dagaren
@@ -43,7 +44,6 @@ public interface Position {
    public boolean getCastlingLong(Colour colour);
    public void setCastlingShort(Colour colour, boolean enabled);
    public boolean getCastlingShort(Colour colour);
-   
    
    public List<Movement> getMovements();
    public List<Movement> getCaptureMovements();
@@ -88,5 +88,9 @@ public interface Position {
    
    public Position getCopy();
    public int getMobility(Colour colour);
+   
+   public ZobristKey getZobristKey();
+   
+   public Map<Long,Integer> getPositionsHash();
    
 }

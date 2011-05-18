@@ -45,10 +45,11 @@ public class ConsoleDebugCommandController extends ConsoleCommandController
    {
       try
       {
-         FileWriter fstream = new FileWriter("/tmp/gladiator_commands.txt", true);
-         BufferedWriter out = new BufferedWriter(fstream);
-         out.write(command + "\n");
-         out.close();
+         //FileWriter fstream = new FileWriter("/tmp/gladiator_commands.txt", true);
+         //BufferedWriter out = new BufferedWriter(fstream);
+         //out.write(command + "\n");
+         //out.close();
+         System.err.println(command);
       }
       catch (Exception e)
       {

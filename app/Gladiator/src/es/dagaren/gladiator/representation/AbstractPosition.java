@@ -16,7 +16,9 @@
  */
 package es.dagaren.gladiator.representation;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dagaren
@@ -27,20 +29,20 @@ public abstract class AbstractPosition implements Position
    /**
     * Establece el bando al que le toca jugar
     */
-   protected Colour turn;
+   protected Colour turn = Colour.WHITE;
    
    /**
     * Establece la posibilidad de enroque
     */
-   protected boolean whiteCastlingShort;
-   protected boolean blackCastlingShort;
-   protected boolean whiteCastlingLong;
-   protected boolean blackCastlingLong;
+   protected boolean whiteCastlingShort = false;
+   protected boolean blackCastlingShort = false;
+   protected boolean whiteCastlingLong = false;
+   protected boolean blackCastlingLong = false;
    
    /**
     * Establece la casilla de peón al paso
     */
-   protected Square enPassantSquare;
+   protected Square enPassantSquare = null;
    
    /**
     * Establece el número de jugada
@@ -52,6 +54,16 @@ public abstract class AbstractPosition implements Position
     * 50 movimientos
     */
    protected int fiftyMovesRuleIndex;
+   
+   /**
+    * Almacena la clave zobrist de la posición
+    */
+   protected ZobristKey zobristKey = new ZobristKey();
+   
+   /**
+    * Hash que almacena 
+    */
+   protected Map<Long, Integer> gamePositionsHash = new HashMap<Long, Integer>();
    
    public void setInitialPosition()
    {
@@ -109,6 +121,8 @@ public abstract class AbstractPosition implements Position
       //Se da el turno a las blancas
       setTurn(Colour.WHITE);
       
+      gamePositionsHash.clear();
+      gamePositionsHash.put(zobristKey.getKey(), 1);
    }
    
    public boolean isValidMove(Movement mov)
@@ -418,6 +432,9 @@ public abstract class AbstractPosition implements Position
          throw new RuntimeException("Posición fen incorrecta: " + fenPosition);
       }
       
+      gamePositionsHash.clear();
+      gamePositionsHash.put(zobristKey.getKey(), 1);
+      
       return isValidPosition();
    }
    
@@ -513,15 +530,22 @@ public abstract class AbstractPosition implements Position
       sb.append(" --------------------------\n");
       sb.append("   a  b  c  d  e  f  g  h\n"); 
       
+      sb.append("FEN: " + this.toFen() + "\n");
+      
       return sb.toString();
    }
    
    /* (non-Javadoc)
     * @see es.dagaren.chesi.Posicion#setTurno(es.dagaren.chesi.Colour)
     */
-   public void setTurn(Colour color)
+   public void setTurn(Colour colour)
    {
-      this.turn = color;
+      if(colour != turn)
+      {
+         //Se actualiza la clave zobrist
+         zobristKey.xorTurn(Colour.BLACK);
+      }
+      this.turn = colour;
    }
    
    /* (non-Javadoc)
@@ -539,10 +563,20 @@ public abstract class AbstractPosition implements Position
    {
       if(colour == Colour.WHITE)
       {
+         if(whiteCastlingShort != enabled)
+         {
+            //Se actualiza la clave zobrist
+            zobristKey.xorCastlingShort(colour);
+         }
          whiteCastlingShort = enabled;
       }
       else
       {
+         if(blackCastlingShort != enabled)
+         {
+            //Se actualiza la clave zobrist
+            zobristKey.xorCastlingShort(colour);
+         }
          blackCastlingShort = enabled;
       }
    }
@@ -554,10 +588,20 @@ public abstract class AbstractPosition implements Position
    {
       if(colour == Colour.WHITE)
       {
+         if(whiteCastlingLong != enabled)
+         {
+            //Se actualiza la clave zobrist
+            zobristKey.xorCastlingLong(colour);
+         }
          whiteCastlingLong = enabled;
       }
       else
       {
+         if(blackCastlingLong != enabled)
+         {
+            //Se actualiza la clave zobrist
+            zobristKey.xorCastlingLong(colour);
+         }
          blackCastlingLong = enabled;
       }
    }
@@ -597,6 +641,12 @@ public abstract class AbstractPosition implements Position
     */
    public void setEnPassantSquare(Square square)
    {
+      if(square != this.enPassantSquare)
+      {
+         //Se actualiza la clave zobrist
+         zobristKey.xorEnPassant(enPassantSquare);
+         zobristKey.xorEnPassant(square);
+      }
       this.enPassantSquare = square;
    }
    
@@ -607,6 +657,7 @@ public abstract class AbstractPosition implements Position
    {
       return enPassantSquare;
    }
+   
    
    /* (non-Javadoc)
     * @see es.dagaren.chesi.Posicion#setNumMovement(int)
@@ -724,6 +775,26 @@ public abstract class AbstractPosition implements Position
       {
          return false;
       }
+   }
+   
+   public ZobristKey getZobristKey()
+   {
+      return this.zobristKey;
+   }
+   
+   protected void setZobristKey(long key)
+   {
+      this.zobristKey.setKey(key);
+   }
+   
+   public Map<Long,Integer> getPositionsHash()
+   {
+      return this.gamePositionsHash;
+   }
+   
+   public void setPositionsHash(Map<Long,Integer> gamePositionsHash)
+   {
+      this.gamePositionsHash = gamePositionsHash;
    }
    
    /** 

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import es.dagaren.gladiator.notation.Notation;
 
@@ -35,7 +37,6 @@ public class BitboardPosition extends AbstractPosition {
    public long tgiempoRecuperarMovements = 0;
    
    //Arrays de bitboards
-   private static boolean isInitiated = false;
    /**
     * Array de bitboards que representan la dirección +1 de cada casilla
     * (pone a uno las posiciones de las casillas que estan en la misma fila 
@@ -569,7 +570,7 @@ public class BitboardPosition extends AbstractPosition {
     * Método que inicia todos los Bitboards y variables auxiliares
     *
     */
-   public static void init()
+   static
    {
       //Se inicializan los bitboards de filas y columnas
       long f1 = 0x00000000000000ffL;
@@ -1408,14 +1409,18 @@ public class BitboardPosition extends AbstractPosition {
     */
    public boolean undoMove(Movement mov)
    {
-//      if(mov.isInPassant())
-//      {
-//         System.err.println("Undo move in passant: " + Notation.toString(mov));
-//         System.err.println(this.toString());
-//      }
-     //System.err.println("Undo Move (antes): " + Notation.toString(mov));
-   //System.err.println(this.toString());
       resetMoves();
+      
+      //Se elimina la posición resultante en el hash de posiciones
+      Integer keyValue = gamePositionsHash.get(zobristKey.getKey());
+      if(keyValue != null)
+      {
+         keyValue = keyValue - 1;
+         if(keyValue == 0)
+            gamePositionsHash.remove(zobristKey.getKey());
+         else
+            gamePositionsHash.put(zobristKey.getKey(), keyValue);
+      }
       
       Piece sp = mov.getSourcePiece();
       Piece dp = mov.getDestinationPiece();
@@ -1476,23 +1481,20 @@ public class BitboardPosition extends AbstractPosition {
       }
       
       //Actualizar turno
-      turn = turn.opposite();
+      this.setTurn(turn.opposite());
       
       //Se actualizan los bitboards para la posición resultante
       updateAttackedFromFull();
       
       //Se recoge el estado irreversible de la pila y se reinstaura
       IrreversibleState state = stateStack.pop();
-      this.enPassantSquare = state.enPassantSquare;
-      this.fiftyMovesRuleIndex = state.fiftyMovesCounter;
-      this.whiteCastlingLong = state.longCastling[Colour.WHITE.index];
-      this.blackCastlingLong = state.longCastling[Colour.BLACK.index];
-      this.whiteCastlingShort = state.shortCastling[Colour.WHITE.index];
-      this.blackCastlingShort = state.shortCastling[Colour.BLACK.index];
+      this.setEnPassantSquare(state.enPassantSquare);
+      this.setFiftyMovesRuleIndex(state.fiftyMovesCounter);
+      this.setCastlingLong(Colour.WHITE, state.longCastling[Colour.WHITE.index]);
+      this.setCastlingLong(Colour.BLACK, state.longCastling[Colour.BLACK.index]);
+      this.setCastlingShort(Colour.WHITE, state.shortCastling[Colour.WHITE.index]);
+      this.setCastlingShort(Colour.BLACK, state.shortCastling[Colour.BLACK.index]);
       /////
-      
-      //System.err.println("Undo Move (despues): " + Notation.toString(mov));
-      //System.err.println(this.toString());
       
       return true;
    }
@@ -1501,8 +1503,7 @@ public class BitboardPosition extends AbstractPosition {
     * @see es.dagaren.chesi.Posicion#hacerMovement(es.dagaren.chesi.Movement)
     */
    public boolean doMove(Movement mov)
-   {//System.err.println("Do Move (antes): " + Notation.toString(mov));
-   //System.err.println(this.toString());
+   {
       //Se recoge el estado irreversible actual y se mete en la pila
       IrreversibleState state = new IrreversibleState();
       state.enPassantSquare = this.enPassantSquare;
@@ -1579,13 +1580,13 @@ public class BitboardPosition extends AbstractPosition {
       {
          if(sp == Piece.WHITE_KING)
          {
-            this.whiteCastlingShort = false;
-            this.whiteCastlingLong = false;
+            this.setCastlingLong(Colour.WHITE, false);
+            this.setCastlingShort(Colour.WHITE, false);
          }
          else if(sp == Piece.BLACK_KING)
          {
-            this.blackCastlingShort = false;
-            this.blackCastlingLong = false;
+            this.setCastlingLong(Colour.BLACK, false);
+            this.setCastlingShort(Colour.BLACK, false);
          }
       }
       else if(sp.genericPiece == GenericPiece.ROOK)
@@ -1594,22 +1595,22 @@ public class BitboardPosition extends AbstractPosition {
          {
             if(ss == Square.a1)
             {
-               this.whiteCastlingLong = false;
+               this.setCastlingLong(Colour.WHITE, false);
             }
             else if(ss == Square.h1)
             {
-               this.whiteCastlingShort = false;
+               this.setCastlingShort(Colour.WHITE, false);
             }
          }
          else if(sp == Piece.BLACK_ROOK)
          {
             if(ss == Square.a8)
             {
-               this.blackCastlingLong = false;
+               this.setCastlingLong(Colour.BLACK, false);
             }
             else if(ss == Square.h8)
             {
-               this.blackCastlingShort = false;
+               this.setCastlingShort(Colour.BLACK, false);
             }
          }
       }
@@ -1619,40 +1620,40 @@ public class BitboardPosition extends AbstractPosition {
       {
         if(ds == Square.a1 && this.whiteCastlingLong)
         {
-           whiteCastlingLong = false;
+           this.setCastlingLong(Colour.WHITE, false);
         }
         else if(ds == Square.a8 && this.blackCastlingLong)
         {
-           blackCastlingLong = false;
+           this.setCastlingLong(Colour.BLACK, false);
         }
         else if(ds == Square.h1 && this.whiteCastlingShort)
         {
-           whiteCastlingShort = false;
+           this.setCastlingShort(Colour.WHITE, false);
         }
         else if(ds == Square.h8 && this.blackCastlingShort)
         {
-           blackCastlingShort = false;
+           this.setCastlingShort(Colour.BLACK, false);
         }
       }
       
       
       //Todo ver si el movimiento hace que un peón se quede en disposición
       //de ser capturado al paso
-      this.enPassantSquare = null;
+      this.setEnPassantSquare(null);
       if(sp.genericPiece == GenericPiece.PAWN)
       {
          if(sp == Piece.WHITE_PAWN)
          {
             if(ss.getRank() == Rank._2 && ds.getRank() == Rank._4)
             {
-               this.enPassantSquare = enPassantSquareDestination[ds.index];
+               this.setEnPassantSquare(enPassantSquareDestination[ds.index]);
             }
          }
          else
          {
             if(ss.getRank() == Rank._7 && ds.getRank() == Rank._5)
             {
-               this.enPassantSquare = enPassantSquareDestination[ds.index];
+               this.setEnPassantSquare(enPassantSquareDestination[ds.index]);
             }
          }
       }
@@ -1674,14 +1675,21 @@ public class BitboardPosition extends AbstractPosition {
       
       
       //Actualizar turno
-      turn = turn.opposite();
+      setTurn(turn.opposite());
+      
+      //Se añade la posición resultante en el hash de posiciones
+      Integer keyValue = gamePositionsHash.get(zobristKey.getKey());
+      if(keyValue != null)
+      {
+         gamePositionsHash.put(zobristKey.getKey(), keyValue + 1);
+      }
+      else
+      {
+         gamePositionsHash.put(zobristKey.getKey(), 1);
+      }
       
       //Se actualizan los bitboards para la posición resultante
       updateAttackedFromFull();
-      
-      
-      //System.err.println("Do Move (despues): " + Notation.toString(mov));
-      //System.err.println(this.toString());
       
       return true;
    }
@@ -1749,20 +1757,24 @@ public class BitboardPosition extends AbstractPosition {
             //Se obtienen las casillas que ataca la pieza
             bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
             bbAttacked &= ~bbTurnOccupied;
-            
+      
             //Se eliminan de las casillas en las que se mantiene el jaque por alguna pieza. 
             bbAttackers = bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
+
             numAttackers = Long.bitCount(bbAttackers);
 
             for(int j = 0; j < numAttackers; j++)
             {
                attackerSquareIndex = Long.numberOfTrailingZeros(bbAttackers);
-               
-               bbAttacked &= ~(bbFullConnection[attackerSquareIndex][kingSquareIndex] & bbAttacked & ~bbSquare[attackerSquareIndex]);
+
+               if(pieceInSquare[attackerSquareIndex].genericPiece == GenericPiece.PAWN)
+                 bbAttacked &= ~(bbInclusiveConnection[attackerSquareIndex][kingSquareIndex] & bbAttacked & ~bbSquare[attackerSquareIndex]);
+               else
+                 bbAttacked &= ~(bbFullConnection[attackerSquareIndex][kingSquareIndex] & bbAttacked & ~bbSquare[attackerSquareIndex]);
                
                bbAttackers ^= bbSquare[attackerSquareIndex];
             }
-            
+
             numAttacked = Long.bitCount(bbAttacked);
             for(int j = 0; j < numAttacked; j++)
             {
@@ -1771,12 +1783,8 @@ public class BitboardPosition extends AbstractPosition {
                //Sólo se añade el movimiento si la casilla destino no está atacada por una pieza del contrario
                if((bbAttackerToSquare[attackedSquareIndex] & bbColourOccupation[turn.opposite().index]) == 0)
                {
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
                   
                   movesList.add(mov);
                   
@@ -1840,10 +1848,14 @@ public class BitboardPosition extends AbstractPosition {
                            bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
                      if(bbAttacker != 0)
                      {
-                        //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                        //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                        //y la casilla del atacante.
-                        isPinned = true;
+                        genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                        if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                        {
+                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieugggza
+                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                           //y la casilla del atacante.
+                           isPinned = true;
+                        }
                      }
                   }
                }
@@ -1857,11 +1869,7 @@ public class BitboardPosition extends AbstractPosition {
                   
                   if(squarePiece.genericPiece != GenericPiece.PAWN)
                   {
-                     mov = new Movement();
-                     mov.setSource(sourceSquare);
-                     mov.setDestination(destinationSquare);
-                     mov.setSourcePiece(squarePiece);
-                     mov.setDestinationPiece(capturePiece);
+                     mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece);
                      
                      movesList.add(mov);
                      
@@ -1871,11 +1879,7 @@ public class BitboardPosition extends AbstractPosition {
                   {
                      if(checkSquareIndex < 56 && checkSquareIndex > 7)
                      {
-                        mov = new Movement();
-                        mov.setSource(sourceSquare);
-                        mov.setDestination(destinationSquare);
-                        mov.setSourcePiece(squarePiece);
-                        mov.setDestinationPiece(capturePiece);
+                        mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece);
                      
                         movesList.add(mov);
                         
@@ -1883,39 +1887,23 @@ public class BitboardPosition extends AbstractPosition {
                      }
                      else
                      {
-                        mov = new Movement();
-                        mov.setSource(sourceSquare);
-                        mov.setDestination(destinationSquare);
-                        mov.setSourcePiece(squarePiece);
-                        mov.setDestinationPiece(capturePiece);
-                        mov.setPromotionPiece(Piece.get(GenericPiece.ROOK, turn));
+                        mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.ROOK, turn));
+                        
                         movesList.add(mov);
                         captureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(sourceSquare);
-                        mov.setDestination(destinationSquare);
-                        mov.setSourcePiece(squarePiece);
-                        mov.setDestinationPiece(capturePiece);
-                        mov.setPromotionPiece(Piece.get(GenericPiece.KNIGHT, turn));
+                        mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.KNIGHT, turn));
+
                         movesList.add(mov);
                         captureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(sourceSquare);
-                        mov.setDestination(destinationSquare);
-                        mov.setSourcePiece(squarePiece);
-                        mov.setDestinationPiece(capturePiece);
-                        mov.setPromotionPiece(Piece.get(GenericPiece.BISHOP, turn));
+                        mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.BISHOP, turn));
+
                         movesList.add(mov);
                         captureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(sourceSquare);
-                        mov.setDestination(destinationSquare);
-                        mov.setSourcePiece(squarePiece);
-                        mov.setDestinationPiece(capturePiece);
-                        mov.setPromotionPiece(Piece.get(GenericPiece.QUEEN, turn));
+                        mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.QUEEN, turn));
+
                         movesList.add(mov);
                         captureMovesList.add(mov);
                      }
@@ -1924,6 +1912,63 @@ public class BitboardPosition extends AbstractPosition {
                
                bbAttackers ^= bbSquare[pieceSquareIndex];
             }
+            
+                   
+            /* SI SE PUEDE CAPTURAR AL PASO */
+            if(enPassantSquare != null && (bbSquare[enPassantSquareSource[enPassantSquare.index].index] & bbKingAttackers) != 0)
+            {
+               piece = Piece.get(GenericPiece.PAWN,turn);
+               bbAttackers = bbAttackerToSquare[enPassantSquare.index] & bbPiecesOccupation[piece.index];
+               
+               numPieces = Long.bitCount(bbAttackers);
+               for(int i = 0; i < numPieces; i++)
+               {
+                  isPinned = false;
+                  
+                  pieceSquareIndex = Long.numberOfTrailingZeros(bbAttackers);
+                  bbEnPassantCapture = bbSquare[enPassantSquareSource[enPassantSquare.index].index];
+                  
+                  //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
+                  //Si no la hay se generan los movimientos de forma normal
+                  bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
+                  if(bbConnection != 0)
+                  {
+                     //Si hay conexión, se comprueba si hay alguna pieza en las casillas
+                     //que unen la casilla del rey y la casilla de la pieza
+                     //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
+                     bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
+                     if((bbConnection & bbOccupation) == 0)
+                     {
+                        //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
+                        //que ataque a la pieza en la misma línea que el rey y la pieza
+                        //Si no hay ninguna se generan los movimientos de la pieza de forma norma
+                        bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
+                              bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
+                        if(bbAttacker != 0)
+                        {
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              isPinned = true;
+                           }
+                        }
+                     }
+                  }
+                  
+                  if(!isPinned)
+                  {
+                     mov = new Movement(square[pieceSquareIndex], enPassantSquare, piece);
+                     mov.setEnPassant(true);
+                  
+                     movesList.add(mov);
+                     captureMovesList.add(mov);
+                  }
+                  ///////////////////////
+                  
+               }
+            }
+            /* FIN SI SE PUEDE CAPTURAR AL PASO */
+            
             /*** FIN DE GENERACIÓN DE LAS CAPTURAS DE LA PIEZA ATACANTE ****/
             
             
@@ -1975,21 +2020,22 @@ public class BitboardPosition extends AbstractPosition {
                               bbAttackerToSquare[attackerSquareIndex] & bbOppositeOccupied;
                         if(bbAttacker != 0)
                         {
-                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                           //y la casilla del atacante.
-                           isPinned = true;
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
+                              //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                              //y la casilla del atacante.
+                              isPinned = true;
+                           }
                         }
                      }
                   }
 
                   if(isPinned == false)
                   {
-                     mov = new Movement();
-                     mov.setSource(square[attackerSquareIndex]);
-                     mov.setDestination(square[squareIndex]);
-                     mov.setSourcePiece(pieceInSquare[attackerSquareIndex]);
-                           
+                     mov = new Movement(square[attackerSquareIndex], square[squareIndex], pieceInSquare[attackerSquareIndex]);
+       
                      movesList.add(mov);
                      nonCaptureMovesList.add(mov);
                   }
@@ -2044,10 +2090,14 @@ public class BitboardPosition extends AbstractPosition {
                               bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
                         if(bbAttacker != 0)
                         {
-                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                           //y la casilla del atacante.
-                           isPinned = true;
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
+                              //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                              //y la casilla del atacante.
+                              isPinned = true;
+                           }
                         }
                      }
                   }
@@ -2056,45 +2106,30 @@ public class BitboardPosition extends AbstractPosition {
                   {
                      if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                      {
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.WHITE_PAWN);
-                     
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                      }
                      else
                      {
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.WHITE_PAWN);
-                        mov.setPromotionPiece(Piece.WHITE_ROOK);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_ROOK);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.WHITE_PAWN);
-                        mov.setPromotionPiece(Piece.WHITE_KNIGHT);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_KNIGHT);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.WHITE_PAWN);
-                        mov.setPromotionPiece(Piece.WHITE_BISHOP);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_BISHOP);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.WHITE_PAWN);
-                        mov.setPromotionPiece(Piece.WHITE_QUEEN);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_QUEEN);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                      }
@@ -2131,10 +2166,14 @@ public class BitboardPosition extends AbstractPosition {
                               bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
                         if(bbAttacker != 0)
                         {
-                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                           //y la casilla del atacante.
-                           isPinned = true;
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
+                              //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                              //y la casilla del atacante.
+                              isPinned = true;
+                           }
                         }
                      }
                   }
@@ -2142,10 +2181,7 @@ public class BitboardPosition extends AbstractPosition {
                   
                   if(isPinned == false)
                   {
-                     mov = new Movement();
-                     mov.setSource(square[pieceSquareIndex]);
-                     mov.setDestination(square[attackedSquareIndex]);
-                     mov.setSourcePiece(Piece.WHITE_PAWN);
+                     mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN);
                   
                      movesList.add(mov);
                      nonCaptureMovesList.add(mov);
@@ -2191,10 +2227,14 @@ public class BitboardPosition extends AbstractPosition {
                               bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
                         if(bbAttacker != 0)
                         {
-                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                           //y la casilla del atacante.
-                           isPinned = true;
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
+                              //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                              //y la casilla del atacante.
+                              isPinned = true;
+                           }
                         }
                      }
                   }
@@ -2203,45 +2243,30 @@ public class BitboardPosition extends AbstractPosition {
                   {
                      if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                      {
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.BLACK_PAWN);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN);
                      
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                      }
                      else
                      {
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.BLACK_PAWN);
-                        mov.setPromotionPiece(Piece.BLACK_ROOK);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_ROOK);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.BLACK_PAWN);
-                        mov.setPromotionPiece(Piece.BLACK_KNIGHT);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_KNIGHT);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.BLACK_PAWN);
-                        mov.setPromotionPiece(Piece.BLACK_BISHOP);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_BISHOP);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                         
-                        mov = new Movement();
-                        mov.setSource(square[pieceSquareIndex]);
-                        mov.setDestination(square[attackedSquareIndex]);
-                        mov.setSourcePiece(Piece.BLACK_PAWN);
-                        mov.setPromotionPiece(Piece.BLACK_QUEEN);
+                        mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_QUEEN);
+
                         movesList.add(mov);
                         nonCaptureMovesList.add(mov);
                      }
@@ -2278,20 +2303,21 @@ public class BitboardPosition extends AbstractPosition {
                               bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
                         if(bbAttacker != 0)
                         {
-                           //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
-                           //sólo se podrá mover a las casillas que conectan las casilla de la pieza
-                           //y la casilla del atacante.
-                           isPinned = true;
+                           genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                           if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                           {
+                              //Si hay alguna pieza atacando en esa linea quiere decir que la pieza
+                              //sólo se podrá mover a las casillas que conectan las casilla de la pieza
+                              //y la casilla del atacante.
+                              isPinned = true;
+                           }
                         }
                      }
                   }
                
                   if(isPinned == false)
                   {
-                     mov = new Movement();
-                     mov.setSource(square[pieceSquareIndex]);
-                     mov.setDestination(square[attackedSquareIndex]);
-                     mov.setSourcePiece(Piece.BLACK_PAWN);
+                     mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN);
                   
                      movesList.add(mov);
                      nonCaptureMovesList.add(mov);
@@ -2313,241 +2339,22 @@ public class BitboardPosition extends AbstractPosition {
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE DAMA *************/
          piece = Piece.get(GenericPiece.QUEEN,turn);
-         bbPieceOccupation = bbPiecesOccupation[piece.index];
-         numPieces = Long.bitCount(bbPieceOccupation);
-         for(int i = 0; i < numPieces; i++)
-         {
-            pieceSquareIndex = Long.numberOfTrailingZeros(bbPieceOccupation);
-            
-            //Se obtienen las casillas que ataca la pieza
-            bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
-            bbAttacked &= ~bbTurnOccupied;
-            
-            //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
-            //Si no la hay se generan los movimientos de forma normal
-            bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
-            if(bbConnection != 0)
-            {
-               //Si hay conexión, se comprueba si hay alguna pieza en las casillas
-               //que unen la casilla del rey y la casilla de la pieza
-               //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
-               bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-               if((bbConnection & bbOccupation) == 0)
-               {
-                  //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
-                  //que ataque a la pieza en la misma línea que el rey y la pieza
-                  //Si no hay ninguna se generan los movimientos de la pieza de forma normal
-                  bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
-                        bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
-                  if(bbAttacker != 0)
-                  {
-                     genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
-                     if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
-                     {
-                        //Si hay alguna pieza atacando en esa línea quiere decir que la pieza
-                        //sólo se podrá mover a las casillas entre la pieza clavada y el rey y las 
-                        //que se encuentran entre la pieza clavada y la pieza que provoca la clavada
-                        bbConnection = bbExclusiveConnection[pieceSquareIndex][Long.numberOfTrailingZeros(bbAttacker)] | bbAttacker;
-                        bbConnection |= bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-                        
-                        bbAttacked = bbAttacked & bbConnection;
-                     }
-                  }
-               }
-            }
-            
-            
-            //En este momento en bitboardAtacadas se encuentran las casillas a las que legarmente puede ir
-            //la dama
-            numAttacked = Long.bitCount(bbAttacked);
-            for(int j = 0; j < numAttacked; j++)
-            {
-               attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
-               
-               mov = new Movement();
-               mov.setSource(square[pieceSquareIndex]);
-               mov.setDestination(square[attackedSquareIndex]);
-               mov.setSourcePiece(piece);
-               capture = pieceInSquare[attackedSquareIndex];
-               mov.setDestinationPiece(capture);
-               
-               movesList.add(mov);
-               if(capture != null)
-               {
-                  captureMovesList.add(mov);
-               }
-               else
-               {
-                  nonCaptureMovesList.add(mov);
-               }
-               
-               bbAttacked ^= bbSquare[attackedSquareIndex];
-            }
-            
-            
-            bbPieceOccupation ^= bbSquare[pieceSquareIndex];
-         }
-         /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE DAMA *************/
          
+         this.generateMoves(piece);
+         /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE DAMA *************/
          
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE TORRE *************/
          piece = Piece.get(GenericPiece.ROOK,turn);
-         bbPieceOccupation = bbPiecesOccupation[piece.index];
-         numPieces = Long.bitCount(bbPieceOccupation);
-         for(int i = 0; i < numPieces; i++)
-         {
-            pieceSquareIndex = Long.numberOfTrailingZeros(bbPieceOccupation);
-            
-            //Se obtienen las casillas que ataca la pieza
-            bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
-            bbAttacked &= ~bbTurnOccupied;
-            
-            //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
-            //Si no la hay se generan los movimientos de forma normal
-            bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
-            if(bbConnection != 0)
-            {
-               //Si hay conexión, se comprueba si hay alguna pieza en las casillas
-               //que unen la casilla del rey y la casilla de la pieza
-               //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
-               bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-               if((bbConnection & bbOccupation) == 0)
-               {
-                  //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
-                  //que ataque a la pieza en la misma línea que el rey y la pieza
-                  //Si no hay ninguna se generan los movimientos de la pieza de forma normal
-                  bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
-                        bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
-                  if(bbAttacker != 0)
-                  {
-                     genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
-                     if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
-                     {
-                        //Si hay alguna pieza atacando en esa línea quiere decir que la pieza
-                        //sólo se podrá mover a las casillas entre la pieza clavada y el rey y las 
-                        //que se encuentran entre la pieza clavada y la pieza que provoca la clavada
-                        bbConnection = bbExclusiveConnection[pieceSquareIndex][Long.numberOfTrailingZeros(bbAttacker)] | bbAttacker;
-                        bbConnection |= bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-                        
-                        bbAttacked = bbAttacked & bbConnection;
-                     }
-                  }
-               }
-            }
-            
-            
-            //En este momento en bitboardAtacadas se encuentran las casillas a las que legarmente puede ir
-            //la dama
-            numAttacked = Long.bitCount(bbAttacked);
-            for(int j = 0; j < numAttacked; j++)
-            {
-               attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
-               
-               mov = new Movement();
-               mov.setSource(square[pieceSquareIndex]);
-               mov.setDestination(square[attackedSquareIndex]);
-               mov.setSourcePiece(piece);
-               capture = pieceInSquare[attackedSquareIndex];
-               mov.setDestinationPiece(capture);
-               
-               movesList.add(mov);
-               if(capture != null)
-               {
-                  captureMovesList.add(mov);
-               }
-               else
-               {
-                  nonCaptureMovesList.add(mov);
-               }
-               
-               bbAttacked ^= bbSquare[attackedSquareIndex];
-            }
-            
-            
-            bbPieceOccupation ^= bbSquare[pieceSquareIndex];
-         }
+         
+         this.generateMoves(piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE TORRE *************/
-         
-         
          
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE ÁLFIL *************/
          piece = Piece.get(GenericPiece.BISHOP,turn);
-         bbPieceOccupation = bbPiecesOccupation[piece.index];
-         numPieces = Long.bitCount(bbPieceOccupation);
-         for(int i = 0; i < numPieces; i++)
-         {
-            pieceSquareIndex = Long.numberOfTrailingZeros(bbPieceOccupation);
-            
-            //Se obtienen las casillas que ataca la pieza
-            bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
-            bbAttacked &= ~bbTurnOccupied;
-            
-            //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
-            //Si no la hay se generan los movimientos de forma normal
-            bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
-            if(bbConnection != 0)
-            {
-               //Si hay conexión, se comprueba si hay alguna pieza en las casillas
-               //que unen la casilla del rey y la casilla de la pieza
-               //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
-               bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-               if((bbConnection & bbOccupation) == 0)
-               {
-                  //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
-                  //que ataque a la pieza en la misma línea que el rey y la pieza
-                  //Si no hay ninguna se generan los movimientos de la pieza de forma normal
-                  bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
-                        bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
-                  if(bbAttacker != 0)
-                  {
-                     genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
-                     if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
-                     {
-                        //Si hay alguna pieza atacando en esa línea quiere decir que la pieza
-                        //sólo se podrá mover a las casillas entre la pieza clavada y el rey y las 
-                        //que se encuentran entre la pieza clavada y la pieza que provoca la clavada
-                        bbConnection = bbExclusiveConnection[pieceSquareIndex][Long.numberOfTrailingZeros(bbAttacker)] | bbAttacker;
-                        bbConnection |= bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-                        
-                        bbAttacked = bbAttacked & bbConnection;
-                     }
-                  }
-               }
-            }
-            
-            
-            //En este momento en bitboardAtacadas se encuentran las casillas a las que legarmente puede ir
-            //la dama
-            numAttacked = Long.bitCount(bbAttacked);
-            for(int j = 0; j < numAttacked; j++)
-            {
-               attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
-               
-               mov = new Movement();
-               mov.setSource(square[pieceSquareIndex]);
-               mov.setDestination(square[attackedSquareIndex]);
-               mov.setSourcePiece(piece);
-               capture = pieceInSquare[attackedSquareIndex];
-               mov.setDestinationPiece(capture);
-               
-               movesList.add(mov);
-               if(capture != null)
-               {
-                  captureMovesList.add(mov);
-               }
-               else
-               {
-                  nonCaptureMovesList.add(mov);
-               }
-               
-               bbAttacked ^= bbSquare[attackedSquareIndex];
-            }
-            
-            
-            bbPieceOccupation ^= bbSquare[pieceSquareIndex];
-         }
+         
+         this.generateMoves(piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE ÁLFIL *************/
          
          
@@ -2555,80 +2362,8 @@ public class BitboardPosition extends AbstractPosition {
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE CABALLO *************/
          piece = Piece.get(GenericPiece.KNIGHT,turn);
-         bbPieceOccupation = bbPiecesOccupation[piece.index];
-         numPieces = Long.bitCount(bbPieceOccupation);
-         for(int i = 0; i < numPieces; i++)
-         {
-            pieceSquareIndex = Long.numberOfTrailingZeros(bbPieceOccupation);
-            
-            //Se obtienen las casillas que ataca la pieza
-            bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
-            bbAttacked &= ~bbTurnOccupied;
-            
-            //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
-            //Si no la hay se generan los movimientos de forma normal
-            bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
-            if(bbConnection != 0)
-            {
-               //Si hay conexión, se comprueba si hay alguna pieza en las casillas
-               //que unen la casilla del rey y la casilla de la pieza
-               //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
-               bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-               if((bbConnection & bbOccupation) == 0)
-               {
-                  //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
-                  //que ataque a la pieza en la misma línea que el rey y la pieza
-                  //Si no hay ninguna se generan los movimientos de la pieza de forma normal
-                  bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
-                        bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
-                  if(bbAttacker != 0)
-                  {
-                     genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
-                     if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
-                     {
-                        //Si hay alguna pieza atacando en esa línea quiere decir que la pieza
-                        //sólo se podrá mover a las casillas entre la pieza clavada y el rey y las 
-                        //que se encuentran entre la pieza clavada y la pieza que provoca la clavada
-                        bbConnection = bbExclusiveConnection[pieceSquareIndex][Long.numberOfTrailingZeros(bbAttacker)] | bbAttacker;
-                        bbConnection |= bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
-                        
-                        bbAttacked = bbAttacked & bbConnection;
-                     }
-                  }
-               }
-            }
-            
-            
-            //En este momento en bitboardAtacadas se encuentran las casillas a las que legarmente puede ir
-            //la dama
-            numAttacked = Long.bitCount(bbAttacked);
-            for(int j = 0; j < numAttacked; j++)
-            {
-               attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
-               
-               mov = new Movement();
-               mov.setSource(square[pieceSquareIndex]);
-               mov.setDestination(square[attackedSquareIndex]);
-               mov.setSourcePiece(piece);
-               capture = pieceInSquare[attackedSquareIndex];
-               mov.setDestinationPiece(capture);
-               
-               movesList.add(mov);
-               if(capture != null)
-               {
-                  captureMovesList.add(mov);
-               }
-               else
-               {
-                  nonCaptureMovesList.add(mov);
-               }
-               
-               bbAttacked ^= bbSquare[attackedSquareIndex];
-            }
-            
-            
-            bbPieceOccupation ^= bbSquare[pieceSquareIndex];
-         }
+         
+         this.generateMoves(piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE CABALLO *************/
          
          
@@ -2653,12 +2388,8 @@ public class BitboardPosition extends AbstractPosition {
                //Sólo se añade el movimiento si la casilla destino no está atacada por una pieza del contrario
                if((bbAttackerToSquare[attackedSquareIndex] & bbColourOccupation[turn.opposite().index]) == 0)
                {
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
                   
                   movesList.add(mov);
                   if(capture != null)
@@ -2802,7 +2533,7 @@ public class BitboardPosition extends AbstractPosition {
                if(bbEnPassantCapture != 0 && 
                      ((bbAttacked & bbSquare[enPassantSquare.index]) != 0) &&
                      (square[kingSquareIndex].getRank() == enPassantSquareSource[enPassantSquare.index].getRank()))
-               {BitboardUtils.printInConsole(bbAttacked);
+               {
                   //Se comprueba si hay que eliminar la captura al paso debido a
                   //que resultaría en una posición de jaque
                   if((bbExclusiveConnection[pieceSquareIndex][kingSquareIndex] & 
@@ -2835,12 +2566,8 @@ public class BitboardPosition extends AbstractPosition {
                
                if(attackedSquareIndex < 56 && attackedSquareIndex > 7)
                {
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
                   capture = pieceInSquare[attackedSquareIndex];
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
                   
                   //Se comprueba si es un movimiento al paso
                   if(enPassantSquare != null && 
@@ -2861,13 +2588,9 @@ public class BitboardPosition extends AbstractPosition {
                }
                else
                {
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
-                  mov.setPromotionPiece(Piece.get(GenericPiece.ROOK,turn));
                   capture = pieceInSquare[attackedSquareIndex];
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.ROOK,turn));
+                  
                   movesList.add(mov);
                   if(capture != null)
                   {
@@ -2878,12 +2601,8 @@ public class BitboardPosition extends AbstractPosition {
                      nonCaptureMovesList.add(mov);
                   }
                   
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
-                  mov.setPromotionPiece(Piece.get(GenericPiece.KNIGHT,turn));
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.KNIGHT,turn));
+
                   movesList.add(mov);
                   if(capture != null)
                   {
@@ -2894,12 +2613,8 @@ public class BitboardPosition extends AbstractPosition {
                      nonCaptureMovesList.add(mov);
                   }
                   
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
-                  mov.setPromotionPiece(Piece.get(GenericPiece.BISHOP,turn));
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.BISHOP,turn));
+
                   movesList.add(mov);
                   if(capture != null)
                   {
@@ -2910,12 +2625,8 @@ public class BitboardPosition extends AbstractPosition {
                      nonCaptureMovesList.add(mov);
                   }
                   
-                  mov = new Movement();
-                  mov.setSource(square[pieceSquareIndex]);
-                  mov.setDestination(square[attackedSquareIndex]);
-                  mov.setSourcePiece(piece);
-                  mov.setPromotionPiece(Piece.get(GenericPiece.QUEEN,turn));
-                  mov.setDestinationPiece(capture);
+                  mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.QUEEN,turn));
+
                   movesList.add(mov);
                   if(capture != null)
                   {
@@ -2941,6 +2652,83 @@ public class BitboardPosition extends AbstractPosition {
       
       //long despues = System.currentTimeMillis();
       //tiempoRecuperarMovements += despues - before;
+   }
+   
+   protected void generateMoves(Piece piece)
+   {
+      /************** GENERACIÓN DE LOS MOVIMIENTOS  *************/
+      bbPieceOccupation = bbPiecesOccupation[piece.index];
+      numPieces = Long.bitCount(bbPieceOccupation);
+      for(int i = 0; i < numPieces; i++)
+      {
+         pieceSquareIndex = Long.numberOfTrailingZeros(bbPieceOccupation);
+         
+         //Se obtienen las casillas que ataca la pieza
+         bbAttacked = bbAttackedFromSquare[pieceSquareIndex];
+         bbAttacked &= ~bbTurnOccupied;
+         
+         //Se comprueba si hay conexión entre la casilla del rey y la casilla de la pieza
+         //Si no la hay se generan los movimientos de forma normal
+         bbConnection = bbInclusiveConnection[pieceSquareIndex][kingSquareIndex];
+         if(bbConnection != 0)
+         {
+            //Si hay conexión, se comprueba si hay alguna pieza en las casillas
+            //que unen la casilla del rey y la casilla de la pieza
+            //Si sí que hay alguna pieza se generan los movimientos de la pieza de forma normal
+            bbConnection = bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
+            if((bbConnection & bbOccupation) == 0)
+            {
+               //Si no hay casillas se comprueba si hay alguna pieza de ataque de largo alcance
+               //que ataque a la pieza en la misma línea que el rey y la pieza
+               //Si no hay ninguna se generan los movimientos de la pieza de forma normal
+               bbAttacker = bbFullConnection[pieceSquareIndex][kingSquareIndex] & 
+                     bbAttackerToSquare[pieceSquareIndex] & bbOppositeOccupied;
+               if(bbAttacker != 0)
+               {
+                  genericPiece = pieceInSquare[Long.numberOfTrailingZeros(bbAttacker)].genericPiece;
+                  if(genericPiece != GenericPiece.PAWN && genericPiece != GenericPiece.KING)
+                  {
+                     //Si hay alguna pieza atacando en esa línea quiere decir que la pieza
+                     //sólo se podrá mover a las casillas entre la pieza clavada y el rey y las 
+                     //que se encuentran entre la pieza clavada y la pieza que provoca la clavada
+                     bbConnection = bbExclusiveConnection[pieceSquareIndex][Long.numberOfTrailingZeros(bbAttacker)] | bbAttacker;
+                     bbConnection |= bbExclusiveConnection[pieceSquareIndex][kingSquareIndex];
+                     
+                     bbAttacked = bbAttacked & bbConnection;
+                  }
+               }
+            }
+         }
+         
+         
+         //En este momento en bitboardAtacadas se encuentran las casillas a las que legarmente puede ir
+         //la dama
+         numAttacked = Long.bitCount(bbAttacked);
+         for(int j = 0; j < numAttacked; j++)
+         {
+            attackedSquareIndex = Long.numberOfTrailingZeros(bbAttacked);
+            
+            capture = pieceInSquare[attackedSquareIndex];
+            mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
+            
+            movesList.add(mov);
+            if(capture != null)
+            {
+               captureMovesList.add(mov);
+            }
+            else
+            {
+               nonCaptureMovesList.add(mov);
+            }
+            
+            bbAttacked ^= bbSquare[attackedSquareIndex];
+         }
+         
+         
+         bbPieceOccupation ^= bbSquare[pieceSquareIndex];
+      }
+      /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS *************/
+      
    }
    
 
@@ -3011,21 +2799,21 @@ public class BitboardPosition extends AbstractPosition {
       putPiece(pieza,casilla);
    }
 
-   public void putPiece(Piece pieza, Square casilla)
+   public void putPiece(Piece piece, Square square)
    {
       resetMoves();
       
-      int squareIndex = casilla.index;
+      int squareIndex = square.index;
       
-      Piece piece = pieceInSquare[squareIndex];
+      Piece currentPiece = pieceInSquare[squareIndex];
       
-      if(piece == null)
+      if(currentPiece == null)
       {
          //Se añade la pieza al bitboard correspondiente a la pieza
-         bbPiecesOccupation[pieza.index] |= bbSquare[squareIndex]; 
+         bbPiecesOccupation[piece.index] |= bbSquare[squareIndex]; 
          
          //Se guarda la pieza que se encuentra en la casilla
-         pieceInSquare[squareIndex] = pieza;
+         pieceInSquare[squareIndex] = piece;
          
          //Se actualizan los bitboards de ocupacion: normal, rotado 90 grados y rotados 45 grados a ambos lados
          bbOccupation |= bbSquare[squareIndex];
@@ -3033,7 +2821,7 @@ public class BitboardPosition extends AbstractPosition {
          bbOccupationR45R |= bbSquare[squareRotated45DLeft[squareIndex]];
          bbOccupationR45L |= bbSquare[inverseSquareRotated45DLeft[squareIndex]];
    
-         if(pieza.colour == Colour.WHITE)
+         if(piece.colour == Colour.WHITE)
          {
             bbWhiteOccupation |= bbSquare[squareIndex];
             bbColourOccupation[Colour.WHITE.index] = bbWhiteOccupation;
@@ -3043,10 +2831,13 @@ public class BitboardPosition extends AbstractPosition {
             bbBlackOccupation |= bbSquare[squareIndex];
             bbColourOccupation[Colour.BLACK.index] = bbBlackOccupation;
          }
+         
+         //Se actualiza la clave zobrist
+         zobristKey.xorPiece(piece, square);
       }
       else
       {
-         System.err.println("Poniendo " + pieza.name() + " en casilla " + casilla.name());
+         System.err.println("Poniendo " + piece.name() + " en casilla " + square.name());
          System.err.println(this.toString());
          System.err.println("ERROR: intentando poner pieza en casilla no vacia");
          System.exit(0);
@@ -3090,6 +2881,9 @@ public class BitboardPosition extends AbstractPosition {
             bbBlackOccupation ^= bbSquare[squareIndex];
             bbColourOccupation[Colour.BLACK.index] = bbBlackOccupation;
          }
+         
+         //Se actualiza la clave zobrist
+         zobristKey.xorPiece(piece, square);
       }
       else
       {
@@ -3179,6 +2973,9 @@ public class BitboardPosition extends AbstractPosition {
       posicion.captureMovesList = this.captureMovesList;
       posicion.nonCaptureMovesList = this.nonCaptureMovesList;
       posicion.promotionMovesList = this.promotionMovesList;
+      
+      posicion.setZobristKey(this.getZobristKey().getKey());
+      posicion.setPositionsHash(new HashMap<Long, Integer>(this.getPositionsHash()));
       
       return posicion;
    }

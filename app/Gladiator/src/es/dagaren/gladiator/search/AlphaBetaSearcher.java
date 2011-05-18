@@ -133,7 +133,9 @@ public class AlphaBetaSearcher extends Searcher
       nodes++;
       iterationNodes++;
       
-      //TODO Se chequean las tablas por repetición
+      //Se comprueban las tablas por repetición de posiciones
+      if(position.getPositionsHash().get(position.getZobristKey().getKey()) >=3)
+        return 0;
       
       //TODO Se busca en las tablas de transposición
       
@@ -183,6 +185,7 @@ public class AlphaBetaSearcher extends Searcher
          //Se realiza el siguiente movimiento en la lista
 //Position clone = position.getCopy();
 //String fenBefore = position.toFen();
+//long keyBefore = position.getZobristKey().getKey();
          position.doMove(move);
          
          //Se calcula la evaluación del movimiento
@@ -191,6 +194,13 @@ public class AlphaBetaSearcher extends Searcher
          //Se deshace el movimiento
          position.undoMove(move);
 //String fenAfter = position.toFen();
+//ong keyAfter = position.getZobristKey().getKey();
+//System.err.println("Zobrist key: " + keyAfter);
+//if(keyBefore != keyAfter)
+//{
+//   System.err.println("Zobrist key distintas antes y despues de hacer y deshacer un movimiento. Antes: " + keyBefore + ", despues: " + keyAfter);
+//   System.exit(0);
+//}
 //if(!fenBefore.equals(fenAfter))
 //{
 //   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: " + Notation.toString(move));
@@ -233,11 +243,7 @@ public class AlphaBetaSearcher extends Searcher
             
             if(currentDepth == depth)
             {
-               if(turn == Colour.WHITE)
-                  bestScore = score;
-               else
-                  bestScore = -score;
-               
+               bestScore = score;
                long time = System.currentTimeMillis();
                publishInfo((time - initTime) / 10, visitedNodes, depth, bestScore, parentPrincipalVariation);
             }

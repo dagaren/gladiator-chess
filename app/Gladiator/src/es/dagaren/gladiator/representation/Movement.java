@@ -38,6 +38,37 @@ public class Movement
       
    }
    
+   public Movement(Square sourceSquare, Square destinationSquare)
+   {
+      this.sourceSquare = sourceSquare;
+      this.destinationSquare = destinationSquare;
+   }
+   
+   public Movement(Square sourceSquare, Square destinationSquare, Piece sourcePiece)
+   {
+      this.sourceSquare = sourceSquare;
+      this.destinationSquare = destinationSquare;
+      this.sourcePiece = sourcePiece;
+   }
+   
+   public Movement(Square sourceSquare, Square destinationSquare, Piece sourcePiece, Piece destinationPiece)
+   {
+      this.sourceSquare = sourceSquare;
+      this.destinationSquare = destinationSquare;
+      this.sourcePiece = sourcePiece;
+      this.destinationPiece = destinationPiece;
+   }
+   
+   public Movement(Square sourceSquare, Square destinationSquare, Piece sourcePiece, Piece destinationPiece, Piece promotionPiece)
+   {
+      this.sourceSquare = sourceSquare;
+      this.destinationSquare = destinationSquare;
+      this.sourcePiece = sourcePiece;
+      this.destinationPiece = destinationPiece;
+      this.promotionPiece = promotionPiece;
+   }
+   
+   
    public Movement(String movString)
    {
       int sourceFile = movString.charAt(0) - 'a';

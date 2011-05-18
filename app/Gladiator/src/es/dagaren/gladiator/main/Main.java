@@ -22,7 +22,9 @@ import es.dagaren.gladiator.communication.ConsoleDebugCommandController;
 import es.dagaren.gladiator.communication.xboard.EngineAdapter;
 import es.dagaren.gladiator.communication.xboard.EngineController;
 import es.dagaren.gladiator.engine.Engine;
+import es.dagaren.gladiator.evaluation.Evaluator;
 import es.dagaren.gladiator.representation.BitboardPosition;
+import es.dagaren.gladiator.representation.Position;
 
 /**
  * @author dagaren
@@ -37,16 +39,43 @@ public class Main
    public static void main(String[] args)
    {
       //TODO Se analizan los argumentos
+      for(int i = 0; i < args.length; i++)
+      {
+         String arg = args[i];
+         
+         if(arg.equalsIgnoreCase("--ep"))
+         {
+            executeEvaluatePosition(args[i+1]);
+            return;
+         }
+      }
       
+      executeXboard();
+   }
+   
+   
+   public static void executeEvaluatePosition(String fen)
+   {
+      Position position = new BitboardPosition();
+      boolean result = position.loadFen(fen);
+      if(!result)
+         System.err.println("Error evaluando posición: cadena fen incorrecta");
       
-      //Se inicializan los bitboards de posicion
-      BitboardPosition.init();
+      Evaluator eval = new Evaluator();
+      int score = eval.evaluate(position);
       
-      //Se crea el motor
+      System.out.println(position.toString());
+      System.out.println("Score: " + score);
+   }
+   
+   public static void executeXboard()
+   {
+    //Se crea el motor
       Engine gladiatorEngine = new Engine();
       
       //Se crea el controlador de comandos por consola
       CommandController commandController = new ConsoleDebugCommandController();
+      //CommandController commandController = new ConsoleCommandController();
       
       //Se crea el controlador xboard
       EngineController xboardController = new EngineController();
@@ -80,7 +109,5 @@ public class Main
       
       
       System.err.println("TERMINACIÓN NORMAL DE PROGRAMA");
-      
-      //System.exit(0);
    }
 }

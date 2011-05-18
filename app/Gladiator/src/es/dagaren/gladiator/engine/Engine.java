@@ -222,6 +222,9 @@ public class Engine implements SearcherObserver
    {
       LinkedList<Movement> pv = searcher.getPrincipalVariation();
       
+      boolean isCheckmate = false;
+      boolean isStalemate = false;
+      
       if(pv != null && pv.size() > 0)
       {
          Movement selectedMove = pv.get(0);
@@ -231,20 +234,23 @@ public class Engine implements SearcherObserver
          
          System.err.println(position.toString());
          
-         if(position.isCheckmate())
-         {
-            String result = position.getTurn() == Colour.WHITE ? "0-1" : "1-0";
-            observer.onGameFinished(result, "Jaque mate");
-         }
-         else if(position.isStalemate())
-         {
-            observer.onGameFinished("1/2-1/2", "Ahogado");
-         }
+         isCheckmate = position.isCheckmate();
+         isStalemate = position.isStalemate();
          
          //TODO falta comprobar por tablas normales
          gameTurn = position.getTurn();
          
          observer.onMoveDone(selectedMove);
+         
+         if(isCheckmate)
+         {
+            String result = position.getTurn() == Colour.WHITE ? "0-1" : "1-0";
+            observer.onGameFinished(result, "Jaque mate");
+         }
+         else if(isStalemate)
+         {
+            observer.onGameFinished("1/2-1/2", "Ahogado");
+         }
       }
       else
       {

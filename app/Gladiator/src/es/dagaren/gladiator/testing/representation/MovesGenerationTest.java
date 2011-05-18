@@ -44,7 +44,6 @@ public class MovesGenerationTest
    @BeforeClass
    public static void init()
    {
-      BitboardPosition.init();
    }
    
    private void initMoves(String fen)
@@ -439,6 +438,8 @@ public class MovesGenerationTest
       checkMoves();
    }
    
+  
+   
    @Test
    public void positionTest1()
    {
@@ -479,6 +480,24 @@ public class MovesGenerationTest
          "e4c3", 
          "c2c3",
          "e4d2"
+      };
+      
+      loadRealMoves(moves);
+
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest14()
+   {
+      initMoves("6R1/4r3/8/2N1Pk2/3P2p1/p4R1P/P4PKP/1r6 b - - 1 0");
+
+      String[] moves =
+      {
+         "g4f3"
       };
       
       loadRealMoves(moves);
@@ -609,6 +628,195 @@ public class MovesGenerationTest
       
       checkMoves();
    }
+   
+   @Test
+   public void checkTest15()
+   {
+      initMoves("8/8/2R1p2r/1k6/P7/8/2P3pp/2K2n2 b - a3 0 0");
+      
+      String[] movesStrings =
+      {
+         "b5a4","b5a5", "b5c6", "b5b4"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest16()
+   {
+      initMoves("2r5/p2N2b1/1p2k2p/3N1P2/1R4n1/8/b1P3PP/2KR4 b - - 0 0");
+      
+      String[] movesStrings =
+      {
+         "e6d7", "e6f7", "e6d6", "e6f5"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest17()
+   {
+      initMoves("7r/2RN4/2p1p2p/3b1pk1/1P1P1bpP/8/2PB1PP1/7K b - h3 0 0");
+      
+      String[] movesStrings =
+      {
+         "g5h5", "g5h4", "g5g6",
+         "g4h3"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest18()
+   {
+      initMoves("7k/1pp2b2/p6p/P1P3pP/1P5K/8/8/8 w - g6 0 0");
+      
+      String[] movesStrings =
+      {
+         "h4g4", "h4h3", "h4g3",
+         "h5g6"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest19()
+   {
+      initMoves("8/1r2p3/pr1p2p1/3Pb1k1/PPR1pP2/2P1N1P1/7P/4R2K b - f3 0 0");
+      
+      String[] movesStrings =
+      {
+         "g5h5", "g5f6", "g5h6",
+         "e5f4",
+         "e4f3"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest20()
+   {
+      initMoves("1k6/1p3p2/p7/P1P3Pp/5RK1/8/7r/8 w - h6 0 0");
+      
+      String[] movesStrings =
+      {
+         "g4f3", "g4g3", "g4f5",
+         "g5h6",
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest21()
+   {
+      initMoves("5k2/ppR2p2/8/6pP/1r2BK2/8/8/8 w - g6 0 0");
+      
+      String[] movesStrings =
+      {
+         "f4e3", "f4f5", "f4g4", "f4g3", "f4f3", "f4e5", "f4g5",
+         "h5g6",
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest22()
+   {
+      initMoves("8/8/4P3/1kp2P2/1pP2R2/3R3K/4r1PP/8 b - c3 0 0");
+      
+      String[] movesStrings =
+      {
+         "b5a4", "b5a5", "b5a6", "b5b6", "b5c6", 
+         "b4c3",
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest23()
+   {
+      initMoves("8/8/8/2k2b2/1Pp5/5p2/2N2P1P/7K b - b3 0 0");
+      
+      String[] movesStrings =
+      {
+         "c5b5", "c5b6", "c5c6", "c5d6", "c5d5", 
+         "c4b3",
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest24()
+   {
+      initMoves("1k4r1/1p3p2/p7/P1P3Pp/5RK1/8/7r/8 w - h6 0 0");
+      
+      String[] movesStrings =
+      {
+         "g4f3", "g4g3", "g4f5"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
    
    @Test
    public void checkmateTest1()

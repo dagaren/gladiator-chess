@@ -36,7 +36,6 @@ public class BitboardPositionTest
    @BeforeClass
    public static void init()
    {
-      BitboardPosition.init();
    }
    
    @Test
