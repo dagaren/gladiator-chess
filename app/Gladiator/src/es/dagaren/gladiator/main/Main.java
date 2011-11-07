@@ -70,7 +70,7 @@ public class Main
    
    public static void executeXboard()
    {
-    //Se crea el motor
+      //Se crea el motor
       Engine gladiatorEngine = new Engine();
       
       //Se crea el controlador de comandos por consola

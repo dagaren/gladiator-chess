@@ -16,8 +16,11 @@
  */
 package es.dagaren.gladiator.communication.xboard;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import es.dagaren.gladiator.communication.ProtocolController;
+import es.dagaren.gladiator.notation.Notation;
 import es.dagaren.gladiator.representation.Movement;
 
 /**
@@ -27,17 +30,6 @@ import es.dagaren.gladiator.representation.Movement;
 public class UserController extends ProtocolController implements UserToEngine
 {
    EngineToUser receiver;
-   
-   @Override
-   public void onCommandReceived(String command)
-   {
-      Scanner commandScanner = new Scanner(command);
-      commandScanner.useDelimiter("\\s+");
-      
-      if(receiver != null)
-      {
-      }
-   }
    
    
    /**
@@ -56,389 +48,445 @@ public class UserController extends ProtocolController implements UserToEngine
       return receiver;
    }
    
-   
-   public void protover(String version)
+   @Override
+   public void onCommandReceived(String command)
    {
-      // TODO Auto-generated method stub
-   }
-   
-   public void rejected(String feature)
-   {
+      Scanner commandScanner = new Scanner(command);
+      commandScanner.useDelimiter("\\s+");
       
-   }
-   
-   public void accepted(String feature)
-   {
-      
-   }
-   
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#New()
-    */
-   @Override
-   public void New()
-   {
-      // TODO Auto-generated method stub
+      if(receiver != null)
+      {
+         if("offer draw".equals(command))
+         {
+            receiver.offerDraw();
+         }
+         else if("resign".equals(command))
+         {
+            receiver.resign();
+         }
+         else if(command.startsWith("feature"))
+         {
+            Map<String, String> features = new HashMap<String, String>();
+            
+            command = command.substring("feature".length()).trim();
+            
+            while(command.length() > 0)
+            {  
+               int separatorIndex = command.indexOf("=");
+               String feature = command.substring(0, separatorIndex);
 
-   }
+               String value;
+               
+               command = command.substring(separatorIndex + 1);
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#analyze()
-    */
-   @Override
-   public void analyze()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#bk()
-    */
-   @Override
-   public void bk()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#black()
-    */
-   @Override
-   public void black()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#computer()
-    */
-   @Override
-   public void computer()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#draw()
-    */
-   @Override
-   public void draw()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#easy()
-    */
-   @Override
-   public void easy()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#edit()
-    */
-   @Override
-   public void edit()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#force()
-    */
-   @Override
-   public void force()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#go()
-    */
-   @Override
-   public void go()
-   {
-      // TODO Auto-generated method stub
-
-   }
-   
-   @Override
-   public void playother()
-   {
-      
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#hard()
-    */
-   @Override
-   public void hard()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#hint()
-    */
-   @Override
-   public void hint()
-   {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#holding(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-    */
-   @Override
-   public void holding(String white, String black, String colour, String piece)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#level(java.lang.String, java.lang.String, java.lang.String)
-    */
-   @Override
-   public void level(String numMoves, String time, String increment)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#move(es.dagaren.gladiator.representation.Movement)
-    */
-   @Override
-   public void usermove(Movement move)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#moveNow()
-    */
-   @Override
-   public void moveNow()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#name(java.lang.String)
-    */
-   @Override
-   public void name(String name)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#nopost()
-    */
-   @Override
-   public void nopost()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#otim(java.lang.String)
-    */
-   @Override
-   public void otim(String n)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#partner(java.lang.String)
-    */
-   @Override
-   public void partner(String player)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#partner()
-    */
-   @Override
-   public void partner()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#post()
-    */
-   @Override
-   public void post() {
-      // TODO Auto-generated method stub
-
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#ptell(java.lang.String)
-    */
-   @Override
-   public void ptell(String text)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#quit()
-    */
-   @Override
-   public void quit()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#random()
-    */
-   @Override
-   public void random()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#rating()
-    */
-   @Override
-   public void rating()
-   {
-      // TODO Auto-generated method stub
+               if(command.startsWith("\""))
+               {
+                 command = command.substring(1);
+                 value = command.substring(0, command.indexOf("\""));
+                 command = command.substring(value.length() + 1);
+               }
+               else
+               {
+                  int endCommandIndex = command.indexOf(" ");
+                  if(endCommandIndex == -1)
+                    endCommandIndex = command.length();
+                  value = command.substring(0, endCommandIndex);
+                  command = command.substring(value.length());
+               }
+               
+               
+               features.put(feature, value);
+               
+               command = command.trim();
+            }
+            
+            receiver.feature(features);
+            
+         }
+         else if(command.startsWith("Illegal move:"))
+         {
+            receiver.illegalMove(command.substring("Illegal move:".length()).trim(), "");
+         }
+         else if(command.startsWith("Illegal move ("))
+         {
+            int startIndex = command.indexOf("(");
+            int endIndex = command.indexOf(")");
+            
+            String reason = "";
+            if(startIndex != -1 && endIndex != -1)
+               reason = command.substring(startIndex + 1, endIndex).trim();
+            
+            startIndex = command.indexOf(":");
+            
+            String move = "";
+            if(startIndex != -1)
+               move = command.substring(startIndex).trim();
+            
+            receiver.illegalMove(move, reason);
+         }
+         else if(command.startsWith("Error"))
+         {
+            int startIndex = command.indexOf("(");
+            int endIndex = command.indexOf(")");
+            
+            String errorType = "";
+            if(startIndex != -1 && endIndex != -1)
+               errorType = command.substring(startIndex + 1, endIndex).trim();
+            
+            startIndex = command.indexOf(":");
+            
+            String message = "";
+            if(startIndex != -1)
+               message = command.substring(startIndex).trim();
+            
+            receiver.error(errorType, message);
+         }
+         else if(command.startsWith("move"))
+         {
+            String move = command.substring("move".length()).trim();
+            
+            receiver.move(move);
+         }
+         else if(command.startsWith("tellopponent"))
+         {
+            receiver.tellopponent(command.substring("tellopponent".length()).trim());
+         }
+         else if(command.startsWith("tellothers"))
+         {
+            receiver.tellothers(command.substring("tellothers".length()).trim());
+         }
+         else if(command.startsWith("tellall"))
+         {
+            receiver.tellall(command.substring("tellall".length()).trim());
+         }
+         else if(command.startsWith("telluser"))
+         {
+            receiver.telluser(command.substring("telluser".length()).trim());
+         }
+         else if(command.startsWith("tellusererror"))
+         {
+            receiver.tellusererror(command.substring("tellusererror".length()).trim());
+         }
+         else if(command.startsWith("askuser"))
+         {
+            //TODO Implementar
+         }
+         else if(command.startsWith("tellics"))
+         {
+            receiver.tellics(command.substring("tellics".length()).trim());
+         }
+         else if(command.startsWith("tellicsnoalias"))
+         {
+            receiver.tellicsnoalias(command.substring("tellicsnoalias".length()).trim());
+         }
+         else if(command.startsWith("1-0"))
+         {
+            String result = "1-0";
+            
+            int startIndex = command.indexOf("{");
+            int endIndex = command.indexOf("}");
+            
+            String comment = "";
+            if(startIndex != -1 && endIndex != -1)
+               comment = command.substring(startIndex + 1, endIndex);
+            
+            receiver.result(result, comment);
+         }
+         else if(command.startsWith("0-1"))
+         {
+            String result = "0-1";
+            
+            int startIndex = command.indexOf("{");
+            int endIndex = command.indexOf("}");
+            
+            String comment = "";
+            if(startIndex != -1 && endIndex != -1)
+               comment = command.substring(startIndex + 1, endIndex);
+            
+            receiver.result(result, comment);
+         }
+         else if(command.startsWith("1/2-1/2"))
+         {
+            String result = "1/2-1/2";
+            
+            int startIndex = command.indexOf("{");
+            int endIndex = command.indexOf("}");
+            
+            String comment = "";
+            if(startIndex != -1 && endIndex != -1)
+               comment = command.substring(startIndex + 1, endIndex);
+            
+            receiver.result(result, comment);
+         }
+         
+      }
    }
    
    @Override
-   public void ics(String hostname)
+   public synchronized void protover(String version)
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("protover " + version);
    }
    
    @Override
-   public void pause()
+   public synchronized void rejected(String feature)
    {
-      
+      commandController.sendCommand("rejected");
    }
    
    @Override
-   public void resume()
+   public synchronized void accepted(String feature)
    {
-      
-   }
-   
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#remove()
-    */
-   @Override
-   public void remove()
-   {
-      // TODO Auto-generated method stub
-   }
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#result(java.lang.String, java.lang.String)
-    */
-   @Override
-   public void result(String result, String comment)
-   {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("accepted");
    }
    
    @Override
-   public void setboard(String fen)
+   public synchronized void New()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("new");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#sd(java.lang.String)
-    */
    @Override
-   public void sd(String deep)
+   public synchronized void analyze()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("analyze");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#st(java.lang.String)
-    */
    @Override
-   public void st(String time)
+   public synchronized void bk()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("bk");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#time(java.lang.String)
-    */
    @Override
-   public void time(String n)
+   public synchronized void black()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("black");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#undo()
-    */
    @Override
-   public void undo()
+   public synchronized void computer()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("computer");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#variant(java.lang.String)
-    */
    @Override
-   public void variant(String name)
+   public synchronized void draw()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("draw");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#white()
-    */
    @Override
-   public void white()
+   public synchronized void easy()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("easy");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#xboard()
-    */
    @Override
-   public void xboard()
+   public synchronized void edit()
    {
-      // TODO Auto-generated method stub
+      commandController.sendCommand("edit");
    }
 
-
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.communication.xboard.UserToEngine#ping(java.lang.String)
-    */
    @Override
-   public void ping(String n)
+   public synchronized void force()
    {
-      // TODO Auto-generated method stub
-      
+      commandController.sendCommand("force");
+   }
+
+   @Override
+   public synchronized void go()
+   {
+      commandController.sendCommand("go");
+   }
+   
+   @Override
+   public synchronized void playother()
+   {
+      commandController.sendCommand("playother");
+   }
+
+   @Override
+   public synchronized void hard()
+   {
+      commandController.sendCommand("hard");
+   }
+
+   @Override
+   public synchronized void hint()
+   {
+      commandController.sendCommand("hint");
+   }
+
+   @Override
+   public synchronized void holding(String white, String black, String colour, String piece)
+   {
+      commandController.sendCommand("holding " + white + " " + black);
+   }
+
+   @Override
+   public synchronized void level(String numMoves, String time, String increment)
+   {
+      commandController.sendCommand("level " + numMoves + " " + time + " " + increment);
+   }
+
+   @Override
+   public synchronized void usermove(Movement move)
+   {
+      commandController.sendCommand("usermove " + Notation.toString(move));
+   }
+
+   @Override
+   public synchronized void moveNow()
+   {
+      commandController.sendCommand("?");
+   }
+
+   @Override
+   public synchronized void name(String name)
+   {
+      commandController.sendCommand("name " + name);
+   }
+
+   @Override
+   public synchronized void nopost()
+   {
+      commandController.sendCommand("nopost");
+   }
+
+   @Override
+   public synchronized void otim(String n)
+   {
+      commandController.sendCommand("otim " + n);
+   }
+
+   @Override
+   public synchronized void partner(String player)
+   {
+      commandController.sendCommand("partner " + player);
+   }
+
+   @Override
+   public synchronized void partner()
+   {
+      commandController.sendCommand("partner");
+   }
+
+   @Override
+   public synchronized void post() 
+   {
+      commandController.sendCommand("post");
+   }
+
+   @Override
+   public synchronized void ptell(String text)
+   {
+      commandController.sendCommand("ptell " + text);
+   }
+
+   @Override
+   public synchronized void quit()
+   {
+      commandController.sendCommand("quit");
+   }
+
+   @Override
+   public synchronized void random()
+   {
+      commandController.sendCommand("random");
+   }
+
+   @Override
+   public synchronized void rating()
+   {
+      commandController.sendCommand("rating");
+   }
+   
+   @Override
+   public synchronized void ics(String hostname)
+   {
+      commandController.sendCommand("hostname " + hostname);
+   }
+   
+   @Override
+   public synchronized void pause()
+   {
+      commandController.sendCommand("pause");
+   }
+   
+   @Override
+   public synchronized void resume()
+   {
+      commandController.sendCommand("resume");
+   }
+   
+   @Override
+   public synchronized void remove()
+   {
+      commandController.sendCommand("remove");
+   }
+
+   @Override
+   public synchronized void result(String result, String comment)
+   {
+      String command = "result " + result;
+      if(!comment.trim().isEmpty())
+         command += " {" + comment + "}";
+      commandController.sendCommand(command);
+   }
+   
+   @Override
+   public synchronized void setboard(String fen)
+   {
+      commandController.sendCommand("setboard " + fen);
+   }
+
+   @Override
+   public synchronized void sd(String deep)
+   {
+      commandController.sendCommand("sd " + deep);
+   }
+
+   @Override
+   public synchronized void st(String time)
+   {
+      commandController.sendCommand("st " + time);
+   }
+
+   @Override
+   public synchronized void time(String n)
+   {
+      commandController.sendCommand("time " + n);
+   }
+
+   @Override
+   public synchronized void undo()
+   {
+      commandController.sendCommand("undo");
+   }
+
+   @Override
+   public synchronized void variant(String name)
+   {
+      commandController.sendCommand("variant " + name);
+   }
+
+   @Override
+   public synchronized void white()
+   {
+      commandController.sendCommand("white");
+   }
+
+   @Override
+   public synchronized void xboard()
+   {
+      commandController.sendCommand("xboard");
+   }
+
+   @Override
+   public synchronized void ping(String n)
+   {
+      commandController.sendCommand("ping " + n);
    }
 
 }

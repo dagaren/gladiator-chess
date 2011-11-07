@@ -27,6 +27,9 @@ import es.dagaren.gladiator.notation.Notation;
 import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.Movement;
 import es.dagaren.gladiator.representation.Position;
+import es.dagaren.gladiator.transposition.Entry;
+import es.dagaren.gladiator.transposition.Table;
+import es.dagaren.gladiator.transposition.Entry.Type;
 
 /**
  * @author dagaren
@@ -47,13 +50,18 @@ public class AlphaBetaSearcher extends Searcher
    protected Comparator<Movement> mvvLvaComparator = new MvvLvaMoveComparator();
    
    //La variante principal
-   protected Map<Integer, LinkedList<Movement>> principalVariations = new HashMap<Integer, LinkedList<Movement>>();
-   protected LinkedList<Movement> currentPrincipalVariation;
+   protected PrincipalVariation principalVariation = new PrincipalVariation();
    
    protected int depth;
    protected int bestScore;
    
+   //La tabla de transposicion
+   protected Table transpositionTable = new Table(52428800);
+   
+   protected Movement transpositionMove = null;
+   
    //Variables de estadísticas
+   
    //Número de cortes producidos
    protected int cutoffs = 0;
    //Número de cortes producidos en nodos quiescence
@@ -64,6 +72,22 @@ public class AlphaBetaSearcher extends Searcher
    protected int qnodes = 0;
    //
    protected int iterationNodes = 0;
+   //Número de búsquedas con ventana de aspiración
+   protected int aspirationSearchs = 0;
+   //Número de búsquedas con ventana de aspiración que fallan
+   protected int aspirationSearchsFails = 0;
+   
+   protected int transpositionCutoffs = 0;
+   
+   
+   
+   
+   
+   
+   int alfa = 0;
+   int beta = 0;
+   
+   int windowSize = 50;
    
    @Override
    public void search()
@@ -75,37 +99,58 @@ public class AlphaBetaSearcher extends Searcher
       qcutoffs = 0;
       nodes = 0;
       qnodes = 0;
+      transpositionCutoffs = 0;
       
-      principalVariations.clear();
+      aspirationSearchs = 0;
+      aspirationSearchsFails = 0;
+      
+      bestPrincipalVariation = new Movement[0];
       
       int score = 0;
       
       //Se implementa la profundidad iterativa
       for(depth = 1; depth <= depthLimit; depth++)
       {
+         System.err.println("Inicio de la iteración " + depth);
          iterationNodes = 0;
          
          long iterationInitTime = System.currentTimeMillis();
          
-         currentPrincipalVariation = new LinkedList<Movement>();
+         alfa = score - windowSize;
+         beta = score + windowSize;
          
-         score = alphaBeta(position, depth, INITIAL_ALFA, INITIAL_BETA, currentPrincipalVariation);
+         aspirationSearchs++;
+         score = alphaBeta(position, alfa, beta, 0, depth);
+
+         if(score <= alfa || score >= beta)
+         {
+            aspirationSearchsFails++;
+            
+            alfa = INITIAL_ALFA;
+            beta = INITIAL_BETA;
+            
+            score = alphaBeta(position, alfa, beta, 0, depth);
+         }
          
-         principalVariations.put(depth, currentPrincipalVariation);
-         
-         principalVariation = currentPrincipalVariation;
+         bestPrincipalVariation = principalVariation.getPrincipalVariation();
          
          int nodesPercent = (nodes + qnodes) > 0 ? ((100 * nodes) / (nodes + qnodes)) : 0;
          int qnodesPercent = (nodes + qnodes) > 0 ? ((100 * qnodes) / (nodes + qnodes)) : 0;
          int cutoffsPercent = (cutoffs + nodes) > 0 ? ((100 * cutoffs) / (cutoffs + nodes)) : 0;
          int qcutoffsPercent = (qcutoffs + qnodes) > 0 ? ((100 * qcutoffs) / (qcutoffs + qnodes)) : 0;
+         int aspirationFailsPercent = aspirationSearchs > 0 ? (100 * aspirationSearchsFails) / aspirationSearchs : 0;
          System.err.println("Estadísticas búsquedas en profundidad " + depth + ":");
          System.err.println("------------------------------------------");
          System.err.println(" * Nodos recorridos: " + nodes + "(" + nodesPercent + "%)");
          System.err.println(" * Nodos quiescende recorridos: " + qnodes + "(" + qnodesPercent + "%)");
          System.err.println(" * Cortes producidos en nodos normales: " + cutoffs + "(" + cutoffsPercent  +"%)");
          System.err.println(" * Cortes producidos en nodos quiescence: " + qcutoffs + "(" + qcutoffsPercent  +"%)");
+         System.err.println(" * Fallos en ventana de aspiración: " + aspirationSearchsFails + "(" + aspirationFailsPercent  +"%)");
+         System.err.println(" * Tabla de tranposición: Aciertos: " + transpositionTable.getHits() + ", Fallos: " + transpositionTable.getMisses());
+         System.err.println(" * Cortes por tabla de transposición: " + transpositionCutoffs);
+         
          System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime) / 1000));
+         /*
          if(principalVariation.size() > 0)
             System.err.println(" * Mejor movimiento encontrado: " + Notation.toString(principalVariation.get(0)));
          System.err.print(" * VP: ");
@@ -113,45 +158,65 @@ public class AlphaBetaSearcher extends Searcher
          {
            System.err.print(" " + Notation.toString(m));
          }
-         System.err.println("");System.err.println("");
+         System.err.println("");
+         */
+         
+         //Si el valor es mate se devuelve
+         if(score == CHECKMATE_SCORE || score == -CHECKMATE_SCORE)
+         {
+            System.err.println("Checkmate score");
+            break;
+         }
+         
       }
+      System.err.println("Fin de busqueda");
       
-      if(position.getTurn() == Colour.BLACK)
-      {
-         score = -score;
-      }
    }
    
-   public int alphaBeta(Position position, int currentDepth, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
+   public int alphaBeta(Position position, int alpha, int beta, int currentDepth, int remainingPlies)
    {
+      principalVariation.initDepth(currentDepth);
+      
+      transpositionMove = null;
+      
+      Entry.Type nodeType = Entry.Type.ALPHA;
+      Movement bestMove = null;
+      
       Colour turn = position.getTurn();
-      
-      LinkedList<Movement> currentPrincipalVariation = new LinkedList<Movement>();
-      
-      //Se acualiza el número de nodos recorridos
-      visitedNodes++;
-      nodes++;
-      iterationNodes++;
       
       //Se comprueban las tablas por repetición de posiciones
       if(position.getPositionsHash().get(position.getZobristKey().getKey()) >=3)
         return 0;
       
-      //TODO Se busca en las tablas de transposición
+      //Se busca en las tablas de transposición
+      Entry transpositionEntry = transpositionTable.get(position.getZobristKey().getKey());
+      if(transpositionEntry != null)
+      {
+         Integer value = transpositionEntry.probe(remainingPlies, alpha, beta);
+         if(value != null)
+         {
+            //principalVariation.saveInDepth(transpositionEntry.getBestMove(), currentDepth);
+
+            if(transpositionEntry.getType() != Type.EXACT)
+            {
+               transpositionCutoffs++;
+               return value;
+            }
+         }
+         if(transpositionEntry.getType() != Type.ALPHA)
+            transpositionMove = transpositionEntry.getBestMove();
+      }
       
       //TODO Comprobación en la tabla de finales
       
       //Se generan los movimientos
       List<Movement> moves = position.getMovements();
       
-      
       if(moves.size() == 0)
       {
          //Si no hay ningún movimiento legal en la posición
          //quiere decir que la posición es tablas por ahogado
          //o jaque mate dependiendo de si la posición es de jaque
-        
-         parentPrincipalVariation.clear();
          if(position.isInCheck(turn))
          {
             //Es jaque mate
@@ -167,11 +232,15 @@ public class AlphaBetaSearcher extends Searcher
       //Si se ha llegado a la máxima profundidad
       //Se devuelve una búsqueda quiescence
       //para evitar el efecto horizonte
-      if(currentDepth == 0)
+      if(remainingPlies == 0)
       {
-         return alphaBetaQuiescence(position, 8, alpha, beta, parentPrincipalVariation);
+         return alphaBetaQuiescence(position, alpha, beta, currentDepth, 8);
       }
       
+      //Se acualiza el número de nodos recorridos
+      visitedNodes++;
+      nodes++;
+      iterationNodes++;
       
       //Se ordenan los movimientos
       this.sortMoves(moves, position, currentDepth);
@@ -179,37 +248,14 @@ public class AlphaBetaSearcher extends Searcher
       //Se itera a través de cada movimiento y se realiza
       //la búsqueda en las posiciones que resultan
       for(Movement move: moves)
-      {
-         currentPrincipalVariation.clear();
-         
-         //Se realiza el siguiente movimiento en la lista
-//Position clone = position.getCopy();
-//String fenBefore = position.toFen();
-//long keyBefore = position.getZobristKey().getKey();
+      {  
          position.doMove(move);
          
          //Se calcula la evaluación del movimiento
-         int score = - alphaBeta(position, currentDepth - 1, -beta, -alpha, currentPrincipalVariation);
+         int score = - alphaBeta(position, -beta, -alpha, currentDepth + 1, remainingPlies - 1);
       
          //Se deshace el movimiento
          position.undoMove(move);
-//String fenAfter = position.toFen();
-//ong keyAfter = position.getZobristKey().getKey();
-//System.err.println("Zobrist key: " + keyAfter);
-//if(keyBefore != keyAfter)
-//{
-//   System.err.println("Zobrist key distintas antes y despues de hacer y deshacer un movimiento. Antes: " + keyBefore + ", despues: " + keyAfter);
-//   System.exit(0);
-//}
-//if(!fenBefore.equals(fenAfter))
-//{
-//   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: " + Notation.toString(move));
-//   System.err.println("Position inicial:");
-//   System.err.println("FEN inicial: " + fenBefore);
-//   System.err.println(clone.toString());
-//   System.err.println("FEN final: " + fenAfter);
-//   System.err.println(position.toString());
-//}
          
          if(score >= beta)
          {
@@ -218,46 +264,55 @@ public class AlphaBetaSearcher extends Searcher
             cutoffs++;
             
             //Se añade el movimiento como movimiento 'killer para la profundidad'
-            if(!move.equals(killerMoves[currentDepth - 1][0]) && !move.equals(killerMoves[currentDepth - 1][1]))
+            if(!move.equals(killerMoves[currentDepth][0]) && !move.equals(killerMoves[currentDepth][1]))
             {
-               killerMoves[currentDepth - 1][1] = killerMoves[currentDepth - 1][0];
-               killerMoves[currentDepth - 1][0] = move;
+               killerMoves[currentDepth][1] = killerMoves[currentDepth][0];
+               killerMoves[currentDepth][0] = move;
             }
             ///////
             
-            parentPrincipalVariation.clear();
+            //Se añade el resultado a la tabla hash
+            transpositionTable.save(position.getZobristKey().getKey(), 
+                           remainingPlies, score, Entry.Type.BETA, 0, move);
             
             return beta;
          }
          if(score > alpha)
          {
+            //
+            nodeType = Entry.Type.EXACT;
+            bestMove = move;
+            
             //si la puntuación devuelta supera alfa
             //se ha encontrado un movimiento mejor
             alpha = score;
             
             numUpdates++;
             
-            parentPrincipalVariation.clear();
-            parentPrincipalVariation.add(move);
-            parentPrincipalVariation.addAll(currentPrincipalVariation);
+            principalVariation.saveInDepth(move, currentDepth);
             
-            if(currentDepth == depth)
+            
+            if(currentDepth == 0)
             {
                bestScore = score;
                long time = System.currentTimeMillis();
-               publishInfo((time - initTime) / 10, visitedNodes, depth, bestScore, parentPrincipalVariation);
+               publishInfo((time - initTime) / 10, visitedNodes, depth, bestScore, principalVariation.getPrincipalVariation());
             }
          }
       }
       
+      //Se guarda entrada en la tabla de transposición
+      transpositionTable.save(position.getZobristKey().getKey(), 
+                           remainingPlies, alpha, nodeType, 0, bestMove);
+      
       return alpha;
    }
    
-   public int alphaBetaQuiescence(Position position, int currentDepth, int alpha, int beta, LinkedList<Movement> parentPrincipalVariation)
+   public int alphaBetaQuiescence(Position position, int alpha, int beta, int currentDepth, int remainingPlies)
    {
-      Colour turn = position.getTurn();
+      principalVariation.initDepth(currentDepth);
       
-      LinkedList<Movement> currentPrincipalVariation = new LinkedList<Movement>();
+      Colour turn = position.getTurn();
       
       //Se actualiza el número de posiciones recorridas
       visitedNodes++;
@@ -272,8 +327,6 @@ public class AlphaBetaSearcher extends Searcher
          //Si no hay ningún movimiento legal en la posición
          //quiere decir que la posición es tablas por ahogado
          //o jaque mate dependiendo de si la posición es de jaque
-        
-         parentPrincipalVariation.clear();
          if(position.isInCheck(turn))
          {
             //Es jaque mate
@@ -292,7 +345,6 @@ public class AlphaBetaSearcher extends Searcher
 
       if(captureMoves.size() == 0)
       {
-         parentPrincipalVariation.clear();
          return score;
       }
       
@@ -303,9 +355,7 @@ public class AlphaBetaSearcher extends Searcher
       //mejor resultado, y si no devolver el valor de la puntuación 
       //estática.
       if(score >= beta)
-      {
-         parentPrincipalVariation.clear();
-         
+      {  
          return beta;
       }
       if(alpha < score)
@@ -322,35 +372,18 @@ public class AlphaBetaSearcher extends Searcher
       //la búsqueda en las posiciones que resultan
       for(Movement move: captureMoves)
       {
-         currentPrincipalVariation.clear(); 
-
          //Se realiza el siguiente movimiento en la lista
-//Position clone = position.getCopy();
-//String fenBefore = position.toFen();
          position.doMove(move);
       
          //Se calcula la puntuación del movimiento
-         score = - alphaBetaQuiescence(position, currentDepth - 1, -beta, -alpha, currentPrincipalVariation);
+         score = - alphaBetaQuiescence(position, -beta, -alpha, currentDepth + 1, remainingPlies - 1);
          
          //Tras evaluar el movimiento se deshace
          position.undoMove(move);
-//String fenAfter = position.toFen();
-//if(!fenBefore.equals(fenAfter))
-//{
-//   System.err.println("ERROR FEN ANTES Y DESPUES DE HACER DESHACER NO QUEDA IGUAL: (quiescence) "  + Notation.toString(move));
-//   System.err.println("Position inicial:");
-//   System.err.println("FEN inicial: " + fenBefore);
-//   System.err.println(clone.toString());
-//   System.err.println("FEN final: " + fenAfter);
-//   System.err.println(position.toString());
-//   System.exit(0);
-//}
          
          if(score >= beta)
          {
             qcutoffs++;
-            
-            parentPrincipalVariation.clear();
             
             return beta;
          }
@@ -358,9 +391,7 @@ public class AlphaBetaSearcher extends Searcher
          {
             numUpdates++;
             
-            parentPrincipalVariation.clear();
-            parentPrincipalVariation.add(move);
-            parentPrincipalVariation.addAll(currentPrincipalVariation);
+            principalVariation.saveInDepth(move, currentDepth);
             
             alpha = score;
          }
@@ -372,40 +403,44 @@ public class AlphaBetaSearcher extends Searcher
    
    
    public void sortMoves(List<Movement> moves, Position position, int currentDepth)
-   {
-      //Se ordenan si acaso vale la variante principal de la iteración anterior
-      /*
-      if(iterationNodes < depth)
-      {
-         List<Movement> im = principalVariations.get(depth - 1);
-         
-         Movement m = im.get(iterationNodes - 1);
-         
-         boolean rem = moves.remove(m);
-         if(rem)
-         {
-            moves.add(0, m);
-         }
-      }
-      */
-      //////////////////////////
+   {    
+      //Se ordenan las capturas por MVV/LVA
+      List<Movement> captures = position.getCaptureMovements();
+      List<Movement> nonCaptures = position.getNonCaptureMovements();
+      
+      sortQuiescenceMoves(captures, position);
+      
+      moves.clear();
+      moves.addAll(captures);
+      moves.addAll(nonCaptures);
       
       //Se ordenan por killer moves
       Movement m = null;
-      if(moves.contains(killerMoves[currentDepth - 1][0]))
+      if(moves.contains(killerMoves[currentDepth][0]))
       {
-         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth - 1][0]));
+         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth][0]));
          //System.err.println("===> Se ordena un movimiento killer 0 en pronfundidad " + currentDepth + " : " + Notation.toString(m));         
          moves.add(0, m);
       }
-      if(moves.contains(killerMoves[currentDepth - 1][1]))
+      if(moves.contains(killerMoves[currentDepth][1]))
       {
  
-         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth - 1][1]));
+         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth][1]));
          //System.err.println("===> Se ordena un movimiento killer 1 en pronfundidad " + currentDepth + " : " + Notation.toString(m)); 
          moves.add(0, m);
       }
       ///////////////////////////////
+      
+      //Se añade el movimiento de la tabla de tranposicion en caso de que haya
+      if(transpositionMove != null)
+      {
+         if(moves.contains(transpositionMove))
+         {
+            //System.err.println("** Se pone movimiento de la tabla de tranposicion primero **");
+            m = moves.remove(moves.lastIndexOf(transpositionMove));
+            moves.add(0, m);
+         }
+      }
       
    }
    

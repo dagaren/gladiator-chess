@@ -16,9 +16,7 @@
  */
 package es.dagaren.gladiator.representation;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -404,7 +402,7 @@ public class BitboardPosition extends AbstractPosition {
    public static Square[] enPassantSquareSource = new Square[64];
    
    //Cola en la que se almacenan los
-   protected Deque<IrreversibleState> stateStack = new ArrayDeque<IrreversibleState>(20);
+   protected LinkedList<IrreversibleState> stateStack = new LinkedList<IrreversibleState>();
    
    
    
@@ -1487,7 +1485,7 @@ public class BitboardPosition extends AbstractPosition {
       updateAttackedFromFull();
       
       //Se recoge el estado irreversible de la pila y se reinstaura
-      IrreversibleState state = stateStack.pop();
+      IrreversibleState state = stateStack.removeLast();
       this.setEnPassantSquare(state.enPassantSquare);
       this.setFiftyMovesRuleIndex(state.fiftyMovesCounter);
       this.setCastlingLong(Colour.WHITE, state.longCastling[Colour.WHITE.index]);
@@ -1512,7 +1510,7 @@ public class BitboardPosition extends AbstractPosition {
       state.longCastling[Colour.BLACK.index] = this.blackCastlingLong;
       state.shortCastling[Colour.WHITE.index] = this.whiteCastlingShort;
       state.shortCastling[Colour.BLACK.index] = this.blackCastlingShort;
-      stateStack.push(state);
+      stateStack.addLast(state);
       /////
       
       resetMoves();
@@ -1703,6 +1701,16 @@ public class BitboardPosition extends AbstractPosition {
       }
       
       return captureMovesList;
+   }
+   
+   public List<Movement> getNonCaptureMovements()
+   {
+      if(movesGenerated == false)
+      {
+         generarMovements();
+      }
+      
+      return nonCaptureMovesList;
    }
    
    public List<Movement> getMovements()

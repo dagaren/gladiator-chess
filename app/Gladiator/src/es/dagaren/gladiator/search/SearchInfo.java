@@ -30,5 +30,5 @@ public class SearchInfo
    public long score = 0;
    public long time = 0;
    public long nodes = 0;
-   public LinkedList<Movement> principalVariation = null;
+   public Movement[] principalVariation = null;
 }

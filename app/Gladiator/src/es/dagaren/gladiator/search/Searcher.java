@@ -45,7 +45,7 @@ public class Searcher implements Runnable
   
    
    //La variante principal
-   protected LinkedList<Movement> principalVariation;
+   protected Movement[] bestPrincipalVariation;
    
    //El hilo dedicado a las búsquedas
    protected Thread thread;
@@ -73,11 +73,11 @@ public class Searcher implements Runnable
    
    public Searcher()
    {
-      depthLimit = 4;
+      depthLimit = 5;
       timeLimit = -1;
       nodesLimit = -1;
       
-      principalVariation = new LinkedList<Movement>();
+      bestPrincipalVariation = new Movement[0];
       
       evaluator = new Evaluator();
       
@@ -129,7 +129,7 @@ public class Searcher implements Runnable
                break;
             
             //Se limpia la variante principal
-            principalVariation = new LinkedList<Movement>();
+            bestPrincipalVariation = new Movement[0];
             
             //Se resetea los nodos recorridos
             visitedNodes = 0;
@@ -148,7 +148,7 @@ public class Searcher implements Runnable
       }
    }
    
-   protected void publishInfo(long time, long nodes, long depth, long score, LinkedList<Movement> principalVariation)
+   protected void publishInfo(long time, long nodes, long depth, long score, Movement[] principalVariation)
    {
       SearchInfo info = new SearchInfo();
       info.time = time; // (time - initTime) / 10;
@@ -200,16 +200,12 @@ public class Searcher implements Runnable
       this.nodesLimit = nodesLimit;
    }
 
-   public LinkedList<Movement> getPrincipalVariation()
+   public Movement[] getPrincipalVariation()
    {
-      return principalVariation;
+      return bestPrincipalVariation;
    }
 
-   public void setPrincipalVariation(LinkedList<Movement> principalVariation)
-   {
-      this.principalVariation = principalVariation;
-   }
-
+   
    public Position getPosition()
    {
       return position;

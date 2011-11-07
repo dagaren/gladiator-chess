@@ -817,6 +817,45 @@ public class MovesGenerationTest
       checkMoves();
    }
    
+   @Test
+   public void checkTest25()
+   {
+      initMoves("8/K4b2/3R1b2/5k2/5pPp/5N2/5R1P/1r6 b - g3 0 0");
+      
+      String[] movesStrings =
+      {
+         "f5g6", "f5e4", "f5g4",
+         "f4g3",
+         "h4g3"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
+   @Test
+   public void checkTest26()
+   {
+      initMoves("6b1/5r2/r1pbp3/p2p1k2/B2P1pPp/P2N3P/1PP2R2/4R2K b - g3 0 0");
+      
+      String[] movesStrings =
+      {
+         "f5g5", "f5g6", "f5f6",
+         "h4g3"
+      };
+      
+      loadRealMoves(movesStrings);
+      
+      printPosition();
+      printMoves();
+      
+      checkMoves();
+   }
+   
    
    @Test
    public void checkmateTest1()

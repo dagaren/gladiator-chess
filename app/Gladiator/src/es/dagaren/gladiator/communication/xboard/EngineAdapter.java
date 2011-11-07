@@ -16,6 +16,9 @@
  */
 package es.dagaren.gladiator.communication.xboard;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import es.dagaren.gladiator.engine.Engine;
 import es.dagaren.gladiator.engine.EngineObserver;
 import es.dagaren.gladiator.notation.Notation;
@@ -37,6 +40,31 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    private boolean ponderingActive = false;
    
    private States state = States.OBSERVING;
+   
+   private Map<String, String> features;
+   
+   public EngineAdapter()
+   {
+      features = new HashMap<String, String>();
+      
+      features.put("ping", "0");
+      features.put("setboard", "1");
+      features.put("playother", "1");
+      features.put("san", "0");
+      features.put("usermove", "1");
+      features.put("time", "1");
+      features.put("draw", "1");
+      features.put("sigint", "0");
+      features.put("sigterm", "0");
+      features.put("reuse", "1");
+      features.put("analyze", "0");
+      features.put("variants", "normal");
+      features.put("colors", "0");
+      features.put("ics", "0");
+      features.put("name", "0");
+      features.put("pause", "1");
+      features.put("done", "1");
+   }
    
    /**
     * @param engineController the engineController to set
@@ -61,6 +89,11 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    {
       this.engine = engine;
       this.engine.setObserver(this);
+      
+      if(features.containsKey("myname"))
+         features.remove("myname");
+      
+      features.put("myname", engine.getName() + " (v" + engine.getVersion() + ")");
    }
 
    /**
@@ -230,8 +263,10 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void go()
    {
-      if(state == States.OBSERVING)
-      {
+      //if(state == States.OBSERVING)
+      //{
+         engine.stop();
+         
          Colour turn = engine.getPosition().getTurn();
          
          engine.setOwnTurn(turn);
@@ -239,7 +274,9 @@ public class EngineAdapter implements UserToEngine, EngineObserver
          //TODO asociar los relojes
          
          engine.think();
-      }
+         
+         state = States.THINKING;
+      //}
    }
    
    @Override
@@ -529,27 +566,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
          int versionNum = Integer.parseInt(version);
          
          if(versionNum >= 2)
-         {
-            String features = 
-               "ping=0 " +
-               "setboard=1 " +
-               "playother=1 " +
-               "san=0 " +
-               "usermove=1 " +
-               "time=1 " +
-               "draw=1 " +
-               "sigint=0 " +
-               "sigterm=0 " +
-               "reuse=1 " +
-               "analyze=0 " +
-               "myname=\"" + engine.getName() + " (v" + engine.getVersion() + ")\"" +
-               "variants=\"normal\" " +
-               "colors=0 " +
-               "ics=0 " +
-               "name=0 " +
-               "pause=1 " +
-               "done=1";
-            
+         {            
             engineController.feature(features);
          }
       }

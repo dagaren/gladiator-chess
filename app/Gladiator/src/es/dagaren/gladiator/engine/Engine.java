@@ -35,7 +35,7 @@ import es.dagaren.gladiator.search.SearcherObserver;
 public class Engine implements SearcherObserver
 {
    protected final String name    = "Gladiator";
-   protected final String version = "0.0.3";
+   protected final String version = "0.0.4";
    protected final String rating  = "(Unknown)";
    
    
@@ -52,7 +52,7 @@ public class Engine implements SearcherObserver
 
    protected EngineObserver observer;
 
-   protected final int defaultDepthLimit = 4;
+   protected final int defaultDepthLimit = 5;
    protected int depthLimit = defaultDepthLimit;
 
    protected boolean debug;
@@ -220,14 +220,14 @@ public class Engine implements SearcherObserver
    @Override
    public void onSearchFinished(Searcher searcher)
    {
-      LinkedList<Movement> pv = searcher.getPrincipalVariation();
+      Movement[] pv = searcher.getPrincipalVariation();
       
       boolean isCheckmate = false;
       boolean isStalemate = false;
       
-      if(pv != null && pv.size() > 0)
+      if(pv != null && pv.length > 0)
       {
-         Movement selectedMove = pv.get(0);
+         Movement selectedMove = pv[0];
          
          //TODO comprobar si el movimiento es legal
          position.doMove(selectedMove);
@@ -254,7 +254,7 @@ public class Engine implements SearcherObserver
       }
       else
       {
-         //System.err.println("[Engine.onSearchFinished] ERROR: LA VARIANTE PRINCIPAL ES NULA O VACIA");
+         System.err.println("[Engine.onSearchFinished] ERROR: LA VARIANTE PRINCIPAL ES NULA O VACIA");
          //System.exit(0);
       }
    }

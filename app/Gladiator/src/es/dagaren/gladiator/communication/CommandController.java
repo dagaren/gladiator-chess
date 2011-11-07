@@ -25,7 +25,7 @@ import java.util.List;
  */
 public abstract class CommandController 
 {
-   List<CommandReceiver> receivers = new ArrayList<CommandReceiver>();
+   protected List<CommandReceiver> receivers = new ArrayList<CommandReceiver>();
    
    
    public void addCommandReceiver(CommandReceiver receiver)

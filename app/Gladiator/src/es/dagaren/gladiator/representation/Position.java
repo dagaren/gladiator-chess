@@ -47,6 +47,7 @@ public interface Position {
    
    public List<Movement> getMovements();
    public List<Movement> getCaptureMovements();
+   public List<Movement> getNonCaptureMovements();
    
    
    public void putGenericPiece(GenericPiece gp,Colour col, Square sq);

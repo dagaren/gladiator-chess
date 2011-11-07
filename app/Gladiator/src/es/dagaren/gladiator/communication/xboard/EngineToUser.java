@@ -16,6 +16,8 @@
  */
 package es.dagaren.gladiator.communication.xboard;
 
+import java.util.Map;
+
 /**
  * @author dagaren
  *
@@ -27,7 +29,7 @@ public interface EngineToUser
     * 
     * @param features
     */
-   public void feature(String features);
+   public void feature(Map<String, String> features);
    
    /**
     * 

@@ -16,7 +16,10 @@
  */
 package es.dagaren.gladiator.communication.xboard;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Map.Entry;
 
 import es.dagaren.gladiator.communication.ProtocolController;
 import es.dagaren.gladiator.notation.Notation;
@@ -159,7 +162,7 @@ public class EngineController extends ProtocolController implements
             String result = commandScanner.next();
 
             commandScanner.useDelimiter("");
-            String comment = commandScanner.next();
+            String comment = ""; //commandScanner.next();
 
             receiver.result(result, comment);
          }
@@ -284,9 +287,32 @@ public class EngineController extends ProtocolController implements
 
    
    @Override
-   public synchronized void feature(String features)
+   public synchronized void feature(Map<String, String> features)
    {
-      commandController.sendCommand("feature " + features);
+      
+      String command = "feature";
+      
+      Iterator<Entry<String, String>> itr = features.entrySet().iterator();
+      
+      while(itr.hasNext())
+      {
+         Entry<String, String> e = itr.next();
+         
+         String feature = (String)e.getKey();
+         String value = (String)e.getValue();
+         
+         try{
+            Integer.parseInt(value);
+         }
+         catch(Exception ex)
+         {
+           value = "\"" + value + "\"";  
+         }
+         
+         command += " " + feature + "="  + value;
+      }
+      
+      commandController.sendCommand(command);
    }
    
    /*

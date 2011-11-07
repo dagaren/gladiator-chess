@@ -33,7 +33,7 @@ public class Evaluator
    //VALOR DE LAS PIEZAS
    public int PAWN_SCORE   = 100;
    public int KNIGHT_SCORE = 300;
-   public int BISHOP_SCORE = 300;
+   public int BISHOP_SCORE = 310;
    public int ROOK_SCORE   = 500;
    public int QUEEN_SCORE  = 900;
    
@@ -136,17 +136,17 @@ public class Evaluator
    {
       int score = 0;
       
-      score += position.getNumPieces(Piece.WHITE_PAWN)   * PAWN_SCORE;
-      score += position.getNumPieces(Piece.WHITE_ROOK)   * ROOK_SCORE;
-      score += position.getNumPieces(Piece.WHITE_BISHOP) * BISHOP_SCORE;
-      score += position.getNumPieces(Piece.WHITE_KNIGHT) * KNIGHT_SCORE;
-      score += position.getNumPieces(Piece.WHITE_QUEEN)  * QUEEN_SCORE;
+      score += (position.getNumPieces(Piece.WHITE_PAWN)   - position.getNumPieces(Piece.BLACK_PAWN))   * PAWN_SCORE;
+      score += (position.getNumPieces(Piece.WHITE_ROOK)   - position.getNumPieces(Piece.BLACK_ROOK))   * ROOK_SCORE;
+      score += (position.getNumPieces(Piece.WHITE_BISHOP) - position.getNumPieces(Piece.BLACK_BISHOP)) * BISHOP_SCORE;
+      score += (position.getNumPieces(Piece.WHITE_KNIGHT) - position.getNumPieces(Piece.BLACK_KNIGHT)) * KNIGHT_SCORE;
+      score += (position.getNumPieces(Piece.WHITE_QUEEN)  - position.getNumPieces(Piece.BLACK_QUEEN))  * QUEEN_SCORE;
       
-      score -= position.getNumPieces(Piece.BLACK_PAWN)   * PAWN_SCORE;
-      score -= position.getNumPieces(Piece.BLACK_ROOK)   * ROOK_SCORE;
-      score -= position.getNumPieces(Piece.BLACK_BISHOP) * BISHOP_SCORE;
-      score -= position.getNumPieces(Piece.BLACK_KNIGHT) * KNIGHT_SCORE;
-      score -= position.getNumPieces(Piece.BLACK_QUEEN)  * QUEEN_SCORE;
+      //score -= position.getNumPieces(Piece.BLACK_PAWN)   * PAWN_SCORE;
+      //score -= position.getNumPieces(Piece.BLACK_ROOK)   * ROOK_SCORE;
+      //score -= position.getNumPieces(Piece.BLACK_BISHOP) * BISHOP_SCORE;
+      //score -= position.getNumPieces(Piece.BLACK_KNIGHT) * KNIGHT_SCORE;
+      //score -= position.getNumPieces(Piece.BLACK_QUEEN)  * QUEEN_SCORE;
       
       return score;
    }
