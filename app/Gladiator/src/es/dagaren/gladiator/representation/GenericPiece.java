@@ -25,32 +25,40 @@ import java.util.Map;
  */
 public class GenericPiece
 {   
-   public static final GenericPiece PAWN = new GenericPiece(0, 100, "PAWN");
-   public static final GenericPiece ROOK = new GenericPiece(1, 500, "ROOK");
-   public static final GenericPiece KNIGHT = new GenericPiece(2, 300, "KNIGHT");
-   public static final GenericPiece BISHOP = new GenericPiece(3, 300, "BISHOP");
-   public static final GenericPiece QUEEN = new GenericPiece(4, 900, "QUEEN");
-   public static final GenericPiece KING = new GenericPiece(5, 10000, "KING");
+   public static final GenericPiece PAWN;
+   public static final GenericPiece ROOK;
+   public static final GenericPiece KNIGHT;
+   public static final GenericPiece BISHOP;
+   public static final GenericPiece QUEEN;
+   public static final GenericPiece KING;
+   
+   public static final GenericPiece[] genericPieces;
+   public static final String[] genericPiecesNames;
+   public static final Map<String, GenericPiece> genericPiecesMap;
    
    public int index;
    public int value;
    
-   protected static GenericPiece[] genericPieces;
-   protected static String[] genericPiecesNames;
-   protected static Map<String, GenericPiece> genericPiecesMap;
+   
+   static
+   {
+      genericPieces = new GenericPiece[6];
+      genericPiecesNames = new String[6];
+      genericPiecesMap = new HashMap<String, GenericPiece>();
+      
+      PAWN   = new GenericPiece(0, 100, "PAWN");
+      KNIGHT = new GenericPiece(2, 300, "KNIGHT");
+      BISHOP = new GenericPiece(3, 300, "BISHOP");
+      ROOK   = new GenericPiece(1, 500, "ROOK");
+      QUEEN  = new GenericPiece(4, 900, "QUEEN");
+      KING   = new GenericPiece(5, 10000, "KING");
+   }
    
    
    private GenericPiece(int index, int value, String name)
    {
       this.index = index;
       this.value = value;
-      
-      if(genericPieces == null)
-      {
-         genericPieces = new GenericPiece[6];
-         genericPiecesNames = new String[6];
-         genericPiecesMap = new HashMap<String, GenericPiece>();
-      }
       
       genericPieces[index] = this;
       genericPiecesNames[index] = name;

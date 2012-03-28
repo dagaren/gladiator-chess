@@ -18,6 +18,7 @@ package es.dagaren.gladiator.evaluation;
 
 import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.GenericPiece;
+import es.dagaren.gladiator.representation.Movement;
 import es.dagaren.gladiator.representation.Piece;
 import es.dagaren.gladiator.representation.Position;
 import es.dagaren.gladiator.representation.Square;
@@ -37,7 +38,7 @@ public class Evaluator
    public int ROOK_SCORE   = 500;
    public int QUEEN_SCORE  = 900;
    
-   public final int[] pawnPieceSquare = {  
+   public static final int[] pawnPieceSquare = {  
          0,   0,   0,   0,   0,   0,   0,   0,
          5,  10,  10, -20, -20,  10,  10,  10,
          5,  -5, -10,   0,   0, -10,  -5,   5,
@@ -48,7 +49,7 @@ public class Evaluator
          0,   0,   0,   0,   0,   0,   0,   0
                                         };
    
-   public final int[] knightPieceSquare = {  
+   public static final int[] knightPieceSquare = {  
        -50, -40, -30, -30, -30, -30, -40, -50,
        -40, -20,   0,   0,   0,   0, -20, -40,
        -30,   0,  10,  15,  15,  10,   0, -30,
@@ -59,7 +60,7 @@ public class Evaluator
        -50, -40, -30, -30, -30, -30, -40, -50
                                         };
    
-   public final int[] bishopPieceSquare = {  
+   public static final int[] bishopPieceSquare = {  
        -20, -10, -10, -10, -10, -10, -10, -20,
        -10,   5,   0,   0,   0,   0,   5, -10,
        -10,  10,  10,  10,  10,  10,  10, -10,
@@ -70,7 +71,7 @@ public class Evaluator
        -20, -10, -10, -10, -10, -10, -10, -20
                                         };
    
-   public final int[] rookPieceSquare = {  
+   public static final int[] rookPieceSquare = {  
          0,   0,   0,   5,   5,   0,   0,   0,
         -5,   0,   0,   0,   0,   0,   0,  -5,
         -5,   0,   0,   0,   0,   0,   0,  -5,
@@ -81,7 +82,7 @@ public class Evaluator
          0,   0,   0,   0,   0,   0,   0,   0
                                           };
    
-   public final int[] queenPieceSquare = {  
+   public static final int[] queenPieceSquare = {  
        -20, -10, -10,  -5,  -5, -10, -10, -20,
        -10,   0,   5,   0,   0,   0,   0, -10,
        -10,   5,   5,   5,   5,   5,   0, -10,
@@ -92,7 +93,7 @@ public class Evaluator
        -20, -10, -10,  -5,  -5, -10, -10, -20
                                           };
    
-   public final int[] kingPieceSquare = {  
+   public static final int[] kingPieceSquare = {  
          -30, -40, -40, -50, -50, -40, -40, -30,
          -30, -40, -40, -50, -50, -40, -40, -30,
          -30, -40, -40, -50, -50, -40, -40, -30,
@@ -103,7 +104,7 @@ public class Evaluator
           20,  30,  10,   0,   0,  10,  30,  20
                                             };
    
-   public final int[] endKingPieceSquare = {  
+   public static final int[] endKingPieceSquare = {  
          -50, -30, -30, -30, -30, -30, -30, -50,
          -30, -30,   0,   0,   0,   0, -30, -30,
          -30, -10, -20,  30,  30,  20, -10, -30,
@@ -114,6 +115,19 @@ public class Evaluator
          -50, -40, -30, -20, -20, -30, -40, -50
                                             };
    
+   public static int[][] pieceSquareValue;
+   
+   static
+   {
+      pieceSquareValue = new int[6][];
+      
+      pieceSquareValue[GenericPiece.PAWN.index]   = pawnPieceSquare;
+      pieceSquareValue[GenericPiece.BISHOP.index] = bishopPieceSquare;
+      pieceSquareValue[GenericPiece.KNIGHT.index] = knightPieceSquare;
+      pieceSquareValue[GenericPiece.ROOK.index]   = rookPieceSquare;
+      pieceSquareValue[GenericPiece.QUEEN.index]  = queenPieceSquare;
+      pieceSquareValue[GenericPiece.KING.index]   = kingPieceSquare; 
+   }
    
    public int evaluate(Position position)
    {
@@ -142,11 +156,6 @@ public class Evaluator
       score += (position.getNumPieces(Piece.WHITE_KNIGHT) - position.getNumPieces(Piece.BLACK_KNIGHT)) * KNIGHT_SCORE;
       score += (position.getNumPieces(Piece.WHITE_QUEEN)  - position.getNumPieces(Piece.BLACK_QUEEN))  * QUEEN_SCORE;
       
-      //score -= position.getNumPieces(Piece.BLACK_PAWN)   * PAWN_SCORE;
-      //score -= position.getNumPieces(Piece.BLACK_ROOK)   * ROOK_SCORE;
-      //score -= position.getNumPieces(Piece.BLACK_BISHOP) * BISHOP_SCORE;
-      //score -= position.getNumPieces(Piece.BLACK_KNIGHT) * KNIGHT_SCORE;
-      //score -= position.getNumPieces(Piece.BLACK_QUEEN)  * QUEEN_SCORE;
       
       return score;
    }
@@ -203,5 +212,13 @@ public class Evaluator
       }
       
       return score;
+   }
+   
+   public int evaluateMove(Movement m)
+   {
+      if(m.getSourcePiece().colour == Colour.WHITE)
+        return pieceSquareValue[m.getSourcePiece().genericPiece.index][m.getDestination().index];
+      else
+        return pieceSquareValue[m.getSourcePiece().genericPiece.index][m.getDestination().mirror().index];
    }
 }

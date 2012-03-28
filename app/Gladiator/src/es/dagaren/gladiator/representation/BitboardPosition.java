@@ -411,14 +411,14 @@ public class BitboardPosition extends AbstractPosition {
    /**
     * Array de mapeo de la pieza que se encuentra en cada casilla
     */
-   protected Piece pieceInSquare[] = new Piece[64];
+   Piece pieceInSquare[] = new Piece[64];
    
    /**
     * Array de bitboards de ocupación de piezas.
     * Cada uno de los bitboards del array representa la
     * ocupación de un tipo de pieza de un color
     */
-   protected long bbPiecesOccupation[] = new long[12];
+   long bbPiecesOccupation[] = new long[12];
    
    /**
     * Bitboard de ocupación de las piezas blancas
@@ -433,7 +433,7 @@ public class BitboardPosition extends AbstractPosition {
    /**
     * Array de bitboards de ocupacion de piezas
     */
-   protected long[] bbColourOccupation = new long[2];
+   long[] bbColourOccupation = new long[2];
    
    /**
     * Bitboard de ocupación de todas las piezas
@@ -460,14 +460,11 @@ public class BitboardPosition extends AbstractPosition {
    /** FIN DE BITBOARDS DE OCUPACIÓN DE PIEZAS **/
    
    protected long bbAttackedFromSquare[] = new long[64];
-   protected long bbAttackerToSquare[] = new long[64];
+   long bbAttackerToSquare[] = new long[64];
    
    
    protected boolean movesGenerated = false;
    protected List<Movement> movesList = null;
-   protected List<Movement> captureMovesList = null;
-   protected List<Movement> nonCaptureMovesList = null;
-   protected List<Movement> promotionMovesList = null;
    
    
    /** CAMPOS DE FUNCIONES INTERNAS */
@@ -1382,9 +1379,6 @@ public class BitboardPosition extends AbstractPosition {
    {
       movesGenerated = false;
       movesList = null;
-      captureMovesList = null;
-      nonCaptureMovesList = null;
-      promotionMovesList = null;
    }
    
    
@@ -1691,53 +1685,31 @@ public class BitboardPosition extends AbstractPosition {
       
       return true;
    }
-
    
-   public List<Movement> getCaptureMovements()
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.representation.Position#getMoves(java.util.List)
+    */
+   @Override
+   public void getMoves(List<Movement> movesList)
    {
-      if(movesGenerated == false)
-      {
-         generarMovements();
-      }
-      
-      return captureMovesList;
-   }
-   
-   public List<Movement> getNonCaptureMovements()
-   {
-      if(movesGenerated == false)
-      {
-         generarMovements();
-      }
-      
-      return nonCaptureMovesList;
+      generarMovements(movesList);
    }
    
    public List<Movement> getMovements()
    {
       if(movesGenerated == false)
       {
-         generarMovements();
+         this.movesList = new ArrayList<Movement>();
+         generarMovements(this.movesList);
       }
-      
-      //movesList.clear();
-      //movesList.addAll(captureMovesList);
-      //movesList.addAll(nonCaptureMovesList);
-      
       
       return movesList;
    }
    
-   public void generarMovements()
+   public void generarMovements(List<Movement> movesList)
    {
       //long before = System.currentTimeMillis();
-      
-      movesList = new ArrayList<Movement>();
-      captureMovesList = new ArrayList<Movement>();
-      promotionMovesList = new ArrayList<Movement>();
-      nonCaptureMovesList = new ArrayList<Movement>();
-      
-
+      movesList.clear();
       
       bbTurnOccupied = bbColourOccupation[turn.index];
       bbOppositeOccupied = bbColourOccupation[turn.opposite().index];
@@ -1795,11 +1767,6 @@ public class BitboardPosition extends AbstractPosition {
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
                   
                   movesList.add(mov);
-                  
-                  if(capture != null)
-                     captureMovesList.add(mov);
-                  else
-                     nonCaptureMovesList.add(mov);
                }
                
                
@@ -1880,8 +1847,6 @@ public class BitboardPosition extends AbstractPosition {
                      mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece);
                      
                      movesList.add(mov);
-                     
-                     captureMovesList.add(mov);
                   }
                   else
                   {
@@ -1890,30 +1855,24 @@ public class BitboardPosition extends AbstractPosition {
                         mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece);
                      
                         movesList.add(mov);
-                        
-                        captureMovesList.add(mov);
                      }
                      else
                      {
                         mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.ROOK, turn));
                         
                         movesList.add(mov);
-                        captureMovesList.add(mov);
                         
                         mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.KNIGHT, turn));
 
                         movesList.add(mov);
-                        captureMovesList.add(mov);
                         
                         mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.BISHOP, turn));
 
                         movesList.add(mov);
-                        captureMovesList.add(mov);
                         
                         mov = new Movement(sourceSquare, destinationSquare, squarePiece, capturePiece, Piece.get(GenericPiece.QUEEN, turn));
 
                         movesList.add(mov);
-                        captureMovesList.add(mov);
                      }
                   }
                }
@@ -1969,7 +1928,6 @@ public class BitboardPosition extends AbstractPosition {
                      mov.setEnPassant(true);
                   
                      movesList.add(mov);
-                     captureMovesList.add(mov);
                   }
                   ///////////////////////
                   
@@ -2045,7 +2003,6 @@ public class BitboardPosition extends AbstractPosition {
                      mov = new Movement(square[attackerSquareIndex], square[squareIndex], pieceInSquare[attackerSquareIndex]);
        
                      movesList.add(mov);
-                     nonCaptureMovesList.add(mov);
                   }
                         
                         
@@ -2117,29 +2074,24 @@ public class BitboardPosition extends AbstractPosition {
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                      }
                      else
                      {
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_ROOK);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_KNIGHT);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_BISHOP);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN, null, Piece.WHITE_QUEEN);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                      }
                   }
                   
@@ -2192,7 +2144,6 @@ public class BitboardPosition extends AbstractPosition {
                      mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.WHITE_PAWN);
                   
                      movesList.add(mov);
-                     nonCaptureMovesList.add(mov);
                   }
                   
                   advances2 ^= bbSquare[attackedSquareIndex];
@@ -2254,29 +2205,24 @@ public class BitboardPosition extends AbstractPosition {
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN);
                      
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                      }
                      else
                      {
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_ROOK);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_KNIGHT);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_BISHOP);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                         
                         mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN, null, Piece.BLACK_QUEEN);
 
                         movesList.add(mov);
-                        nonCaptureMovesList.add(mov);
                      }
                   }
                   
@@ -2328,7 +2274,6 @@ public class BitboardPosition extends AbstractPosition {
                      mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], Piece.BLACK_PAWN);
                   
                      movesList.add(mov);
-                     nonCaptureMovesList.add(mov);
                   }
                   
                   advances2 ^= bbSquare[attackedSquareIndex];
@@ -2348,21 +2293,21 @@ public class BitboardPosition extends AbstractPosition {
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE DAMA *************/
          piece = Piece.get(GenericPiece.QUEEN,turn);
          
-         this.generateMoves(piece);
+         this.generateMoves(movesList, piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE DAMA *************/
          
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE TORRE *************/
          piece = Piece.get(GenericPiece.ROOK,turn);
          
-         this.generateMoves(piece);
+         this.generateMoves(movesList, piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE TORRE *************/
          
          
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE ÁLFIL *************/
          piece = Piece.get(GenericPiece.BISHOP,turn);
          
-         this.generateMoves(piece);
+         this.generateMoves(movesList, piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE ÁLFIL *************/
          
          
@@ -2371,7 +2316,7 @@ public class BitboardPosition extends AbstractPosition {
          /************** GENERACIÓN DE LOS MOVIMIENTOS DE CABALLO *************/
          piece = Piece.get(GenericPiece.KNIGHT,turn);
          
-         this.generateMoves(piece);
+         this.generateMoves(movesList, piece);
          /************** FIN DE GENERACIÓN DE LOS MOVIMIENTOS DE CABALLO *************/
          
          
@@ -2400,14 +2345,6 @@ public class BitboardPosition extends AbstractPosition {
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
                   
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                }
                
                bbAttacked ^= bbSquare[attackedSquareIndex];
@@ -2436,7 +2373,6 @@ public class BitboardPosition extends AbstractPosition {
                {
                   Movement shortCastlingMove = Movement.getMovementEnroqueCorto(turn);
                   movesList.add(shortCastlingMove);
-                  nonCaptureMovesList.add(shortCastlingMove);
                }
             }
          }
@@ -2460,7 +2396,6 @@ public class BitboardPosition extends AbstractPosition {
                {
                   Movement longCastlingMove = Movement.getMovementEnroqueLargo(turn);
                   movesList.add(longCastlingMove);
-                  nonCaptureMovesList.add(longCastlingMove);
                }
             }
          }
@@ -2585,14 +2520,6 @@ public class BitboardPosition extends AbstractPosition {
                   }
                
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                }
                else
                {
@@ -2600,50 +2527,18 @@ public class BitboardPosition extends AbstractPosition {
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.ROOK,turn));
                   
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                   
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.KNIGHT,turn));
 
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                   
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.BISHOP,turn));
 
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                   
                   mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture, Piece.get(GenericPiece.QUEEN,turn));
 
                   movesList.add(mov);
-                  if(capture != null)
-                  {
-                     captureMovesList.add(mov);
-                  }
-                  else
-                  {
-                     nonCaptureMovesList.add(mov);
-                  }
                }
                
                bbAttacked ^= bbSquare[attackedSquareIndex];
@@ -2662,7 +2557,7 @@ public class BitboardPosition extends AbstractPosition {
       //tiempoRecuperarMovements += despues - before;
    }
    
-   protected void generateMoves(Piece piece)
+   protected void generateMoves(List<Movement> movesList, Piece piece)
    {
       /************** GENERACIÓN DE LOS MOVIMIENTOS  *************/
       bbPieceOccupation = bbPiecesOccupation[piece.index];
@@ -2720,14 +2615,6 @@ public class BitboardPosition extends AbstractPosition {
             mov = new Movement(square[pieceSquareIndex], square[attackedSquareIndex], piece, capture);
             
             movesList.add(mov);
-            if(capture != null)
-            {
-               captureMovesList.add(mov);
-            }
-            else
-            {
-               nonCaptureMovesList.add(mov);
-            }
             
             bbAttacked ^= bbSquare[attackedSquareIndex];
          }
@@ -2978,9 +2865,6 @@ public class BitboardPosition extends AbstractPosition {
       
       posicion.movesGenerated = this.movesGenerated;
       posicion.movesList = this.movesList;
-      posicion.captureMovesList = this.captureMovesList;
-      posicion.nonCaptureMovesList = this.nonCaptureMovesList;
-      posicion.promotionMovesList = this.promotionMovesList;
       
       posicion.setZobristKey(this.getZobristKey().getKey());
       posicion.setPositionsHash(new HashMap<Long, Integer>(this.getPositionsHash()));

@@ -22,6 +22,8 @@ package es.dagaren.gladiator.representation;
  */
 public class Movement
 {
+   protected int value = 0;
+   
    private Square sourceSquare;
    private Square destinationSquare;
    
@@ -31,7 +33,6 @@ public class Movement
    private Piece promotionPiece;
    
    private boolean inPassant;
-
    
    public Movement()
    {
@@ -174,6 +175,22 @@ public class Movement
    public void setSourcePiece(Piece sourcePiece)
    {
       this.sourcePiece = sourcePiece;
+   }
+   
+   /**
+    * @return the value
+    */
+   public int getValue()
+   {
+      return value;
+   }
+
+   /**
+    * @param value the move value
+    */
+   public void setValue(int value)
+   {
+      this.value = value;
    }
    
    public boolean equals(Object m)

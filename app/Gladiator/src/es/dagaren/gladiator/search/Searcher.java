@@ -16,6 +16,7 @@
  */
 package es.dagaren.gladiator.search;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,130 +26,147 @@ import es.dagaren.gladiator.representation.Position;
 
 /**
  * @author dagaren
- *
+ * 
  */
 public class Searcher implements Runnable
 {
    /* Variables de límites de la búsqueda */
-   //Profundidad límite
-   protected int depthLimit;
-   //Tiempo límite
-   protected long timeLimit;
-   //Número de nodos límite
-   protected long nodesLimit;
-   
-   //Tiempo de inicio de la búsqueda
-   protected long initTime = 0;
-   
+   // Profundidad límite
+   protected int              depthLimit;
+   // Tiempo límite
+   protected long             timeLimit;
+   // Número de nodos límite
+   protected long             nodesLimit;
+
+   // Tiempo de inicio de la búsqueda
+   protected long             initTime        = 0;
+
    protected volatile boolean search;
    protected volatile boolean exit;
-  
    
-   //La variante principal
-   protected Movement[] bestPrincipalVariation;
+   //Lista de listas de movimientos para cada profundidad
+   List<List<Movement>>       movesLists;
+
+   // La variante principal
+   protected Movement[]       bestPrincipalVariation;
+
+   // El hilo dedicado a las búsquedas
+   protected Thread           thread;
+
+   // La posición de búsqueda
+   protected Position         position;
+
+   // El evaluador de posiciones estáticas
+   protected Evaluator        evaluator;
+
+   // Variables de recolección de estadísticas
+   // Nodos visitados en la búsqueda
+   protected long             visitedNodes;
+   protected long             cutoffs;
+
+   // Constantes
+   protected final int        DRAW_SCORE      = 0;
+   protected final int        CHECKMATE_SCORE = -10000;
    
-   //El hilo dedicado a las búsquedas
-   protected Thread thread;
-   
-   //La posición de búsqueda
-   protected Position position;
-   
-   //El evaluador de posiciones estáticas
-   protected Evaluator evaluator;
-   
-   //Variables de recolección de estadísticas
-   //Nodos visitados en la búsqueda
-   protected long visitedNodes;
-   protected long cutoffs;
-   
-   
-   //Constantes
-   protected final int DRAW_SCORE = 0;
-   protected final int CHECKMATE_SCORE = -10000;
-   
-   protected final int MIN_RATING =  -10000 - 1;
-   protected final int MAX_RATING =   10000 + 1;
-   
+   protected final int        EXIT_SCORE = 10001;
+
+   protected final int        MIN_RATING      = -10000 - 1;
+   protected final int        MAX_RATING      = 10000 + 1;
+
    protected SearcherObserver observer;
-   
+
    public Searcher()
    {
       depthLimit = 5;
       timeLimit = -1;
       nodesLimit = -1;
-      
+
       bestPrincipalVariation = new Movement[0];
       
+      movesLists = new ArrayList<List<Movement>>(32);
+
       evaluator = new Evaluator();
-      
+
       exit = false;
       search = false;
-      
+
       thread = new Thread(this);
       thread.start();
    }
-   
+
    public void run()
    {
       searchLoop();
    }
-   
+
    public synchronized void initSearch(Position position)
    {
       this.position = position.getCopy();
-      
+
       search = true;
-      
+
       notifyAll();
    }
-   
+
    public synchronized void finish()
    {
       exit = true;
+
       search = false;
+
       notifyAll();
    }
-   
-   public synchronized void searchLoop()
+
+   public void searchLoop()
    {
-      while(!exit)
+      while (!exit)
       {
-         synchronized(this)
+         synchronized (this)
          {
-            while(!search && !exit)
+            // Se mantiene el hilo en espera
+            while (!search && !exit)
             {
                try
                {
                   wait();
                }
-               catch(Exception ex)
-               {}
+               catch (Exception ex)
+               {
+               }
             }
-            
-            if(exit == true)
+
+            if (exit == true)
                break;
-            
-            //Se limpia la variante principal
+
+            // Se va a iniciar una nueva búsqueda,
+            // se resetean los valores
+
+            // Se limpia la variante principal
             bestPrincipalVariation = new Movement[0];
-            
-            //Se resetea los nodos recorridos
+
+            // Se resetea los nodos recorridos
             visitedNodes = 0;
-            
-            //Se inicia el tiempo de búsqueda
+
+            // Se inicia el tiempo de búsqueda
             initTime = System.currentTimeMillis();
-           
-            //Se llama a la función de búsquda
-            search();
-            
+         }
+
+         // Se llama a la función de búsquda
+         search();
+
+         synchronized (this)
+         {
+            // La búsqueda ha finalizado
             search = false;
-            
-            if(observer != null)
+
+            if (observer != null)
                observer.onSearchFinished(this);
          }
       }
    }
-   
-   protected void publishInfo(long time, long nodes, long depth, long score, Movement[] principalVariation)
+
+   protected void publishInfo(long time, long nodes, long depth, long score,
+         Movement[] principalVariation)
    {
       SearchInfo info = new SearchInfo();
       info.time = time; // (time - initTime) / 10;
@@ -156,15 +174,15 @@ public class Searcher implements Runnable
       info.nodes = nodes;
       info.depth = depth;
       info.score = score;
-      
-      if(observer != null)
+
+      if (observer != null)
          observer.onInformationPublished(info);
    }
-   
+
    public void search()
-   {  
+   {
    }
-   
+
    public synchronized void stop()
    {
       search = false;
@@ -205,7 +223,6 @@ public class Searcher implements Runnable
       return bestPrincipalVariation;
    }
 
-   
    public Position getPosition()
    {
       return position;
@@ -241,5 +258,30 @@ public class Searcher implements Runnable
       return visitedNodes;
    }
    
-   
+   public List<Movement> getMovesList(int depth)
+   {
+      List<Movement> list;
+      
+      try
+      {
+         list = movesLists.get(depth);
+         if(list == null)
+         {
+            list = new ArrayList<Movement>(35);
+            
+            movesLists.add(depth, list);
+         }
+      }
+      catch(IndexOutOfBoundsException e)
+      {
+         list = new ArrayList<Movement>(35);
+         
+         movesLists.add(depth, list);
+      }
+      
+      list.clear();
+      
+      return list;
+   }
+
 }

@@ -26,6 +26,10 @@ import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.Movement;
 import es.dagaren.gladiator.representation.Position;
 import es.dagaren.gladiator.search.SearchInfo;
+import es.dagaren.gladiator.time.IncrementTypes;
+import es.dagaren.gladiator.time.Quota;
+import es.dagaren.gladiator.time.SuddenDeath;
+import es.dagaren.gladiator.time.TimeControl;
 
 /**
  * @author dagaren
@@ -271,8 +275,6 @@ public class EngineAdapter implements UserToEngine, EngineObserver
          
          engine.setOwnTurn(turn);
          
-         //TODO asociar los relojes
-         
          engine.think();
          
          state = States.THINKING;
@@ -311,15 +313,6 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       System.err.println("Comando no implementado: holding");
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#level(java.lang.String, java.lang.String, java.lang.String)
-    */
-   @Override
-   public synchronized void level(String numMoves, String time, String increment)
-   {
-      // TODO Implementar
-      System.err.println("Comando no implementado: level");
-   }
 
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#move(es.dagaren.gladiator.representation.Movement)
@@ -375,15 +368,6 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       engine.setPublishSearchInfo(false);
    }
 
-   /* (non-Javadoc)
-    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#otim(java.lang.String)
-    */
-   @Override
-   public synchronized void otim(String n)
-   {
-      // TODO Implementar
-      System.err.println("Comando no implementado: otim");
-   }
 
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#partner(java.lang.String)
@@ -510,20 +494,106 @@ public class EngineAdapter implements UserToEngine, EngineObserver
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#st(java.lang.String)
     */
    @Override
-   public synchronized void st(String time)
+   public synchronized void st(String secondsString)
    {
-      // TODO Implementar
-      System.err.println("[EngineAdapter.st]: Comando no implementado");
+      //TODO implementar
+      engineController.error("command not implemented", "st");
+   }
+   
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#level(java.lang.String, java.lang.String, java.lang.String)
+    */
+   @Override
+   public synchronized void level(String numMovesString, String timeString, String incrementString)
+   {
+      try
+      {
+         int moves      = Integer.parseInt(numMovesString);
+         int increment  = Integer.parseInt(incrementString);
+         int minutes    = 5;
+         int seconds    = 0;
+         String[] timeParts = timeString.split(":");
+         minutes    = Integer.parseInt(timeParts[0]);
+         if(timeParts.length > 1)
+         {
+            seconds = Integer.parseInt(timeParts[1]);
+         }
+         IncrementTypes it = increment > 0 ? IncrementTypes.FISCHER : IncrementTypes.NONE; 
+         int time = minutes * 60 + seconds;
+
+         TimeControl tc = null;
+         if(moves == 0)
+         {
+            //Sudden death
+            tc = new SuddenDeath(time, increment, it);
+         }
+         else
+         {
+            //Quota
+            tc = new Quota(moves, time, increment, it);
+         }
+         
+         engine.setTimeControl(tc);
+      }
+      catch(Exception ex)
+      {
+         System.err.println("[EngineAdapter.level]: " + ex.getMessage());
+      }
    }
 
    /* (non-Javadoc)
     * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#time(java.lang.String)
     */
    @Override
-   public synchronized void time(String n)
+   public synchronized void time(String t)
    {
-      // TODO Implementar
-      System.err.println("[EngineAdapter.time]: Comando no implementado");
+      try
+      {
+         int cseconds = Integer.parseInt(t);
+         int mseconds = cseconds * 10;
+         
+         Colour engineTurn = engine.getOwnTurn();
+         if(engineTurn == Colour.WHITE)
+         {
+            engine.getClock().setWhiteTime(mseconds);
+         }
+         else
+         {
+            engine.getClock().setBlackTime(mseconds);
+         }
+ 
+      }
+      catch(Exception ex)
+      {
+         System.err.println("[EngineAdapter.time]: Imposible convertir cadena a entero: " + t);
+      }
+   }
+   
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.protocols.xboard.UserToEngine#otim(java.lang.String)
+    */
+   @Override
+   public synchronized void otim(String t)
+   {
+      try
+      {
+         int cseconds = Integer.parseInt(t);
+         int mseconds = cseconds * 10;
+         
+         Colour opponentTurn = engine.getOwnTurn().opposite();
+         if(opponentTurn == Colour.WHITE)
+         {
+            engine.getClock().setWhiteTime(mseconds);
+         }
+         else
+         {
+            engine.getClock().setBlackTime(mseconds);
+         }
+      }
+      catch(Exception ex)
+      {
+         System.err.println("[EngineAdapter.otime]: Imposible convertir cadena a entero: " + t);
+      }
    }
 
    /* (non-Javadoc)
