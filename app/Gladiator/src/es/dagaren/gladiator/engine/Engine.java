@@ -27,6 +27,8 @@ import es.dagaren.gladiator.search.AlphaBetaSearcher;
 import es.dagaren.gladiator.search.SearchInfo;
 import es.dagaren.gladiator.search.Searcher;
 import es.dagaren.gladiator.search.SearcherObserver;
+import es.dagaren.gladiator.time.Clock;
+import es.dagaren.gladiator.time.TimeControl;
 
 /**
  * @author dagaren
@@ -35,7 +37,7 @@ import es.dagaren.gladiator.search.SearcherObserver;
 public class Engine implements SearcherObserver
 {
    protected final String name    = "Gladiator";
-   protected final String version = "0.0.4";
+   protected final String version = "0.0.6";
    protected final String rating  = "(Unknown)";
    
    
@@ -45,6 +47,9 @@ public class Engine implements SearcherObserver
    protected Position position;
    protected Searcher searcher;
    
+   protected TimeControl timeControl;
+   protected Clock       clock;
+   
    private boolean publishSearchInfo = false;
    
    protected Colour ownTurn;
@@ -53,7 +58,7 @@ public class Engine implements SearcherObserver
    protected EngineObserver observer;
 
    protected final int defaultDepthLimit = 5;
-   protected int depthLimit = defaultDepthLimit;
+   protected int       depthLimit = defaultDepthLimit;
 
    protected boolean debug;
    
@@ -64,6 +69,8 @@ public class Engine implements SearcherObserver
       
       position = new BitboardPosition();
       position.setInitialPosition();
+      
+      clock = new Clock();
       
       ownTurn = Colour.BLACK;
    }
@@ -89,6 +96,22 @@ public class Engine implements SearcherObserver
       this.position = position;
    }
    
+   public TimeControl getTimeControl()
+   {
+      return timeControl;
+   }
+
+   public void setTimeControl(TimeControl timeControl)
+   {
+      this.timeControl = timeControl;
+   }
+   
+   public Clock getClock()
+   {
+      return this.clock;
+   }
+   
+   
    public void resetDepthLimit()
    {
       this.depthLimit = defaultDepthLimit;
@@ -104,29 +127,50 @@ public class Engine implements SearcherObserver
       this.ownTurn = ownTurn;
    }
    
+   
+   
+   
    public synchronized void newGame()
    {
+      //Se inicia el buscador
       searcher.stop();
       
+      //Se inicia la posición
       position = new BitboardPosition();
       position.setInitialPosition();
+      
+      //Se inicia el reloj
+      //if(timeControl != null)
+      //{
+      //  clock.setTimeControl(timeControl);
+      //  clock.init();
+      //}
       
       think();
    }
    
    public synchronized void stop()
    {
+      //Se pausa el buscador
       searcher.stop();
+      
+      //Se pausa el reloj
+      //clock.pause();
    }
    
    public synchronized void resume()
    {
+      //Se reanuda el reloj
+      //clock.resume();
+      
       think();
    }
    
    public synchronized void finish()
    {
       active = false;
+      
+      //clock.pause();
       
       searcher.finish();
       
@@ -146,26 +190,52 @@ public class Engine implements SearcherObserver
       }
    }
    
-   public synchronized void doMove(Movement move)
+   public void doMove(Movement move)
+   {
+      this.doMove(move, false);
+   }
+   
+   public synchronized void doMove(Movement move, boolean isEngineMove)
    {
       if(!position.isValidMove(move))
-      {
-         observer.onIncorrectMove(move);
+      {  
+         if(!isEngineMove)
+         {
+            observer.onIncorrectMove(move);
+         } 
          
          return;
       }
       
       move = getFullMove(move);
+      
+      //Se hace el movimiento en la posición
       position.doMove(move);
+      
+      //Se pulsa el reloj
+      //clock.switchClocks();
+      
+      if(isEngineMove)
+      {
+         observer.onMoveDone(move);
+      } 
       
       if(position.isCheckmate())
       {
+         //clock.pause();
+         
          String result = position.getTurn() == Colour.WHITE ? "0-1" : "1-0";
          observer.onGameFinished(result, "Jaque Mate");
+         
+         return;
       }
       else if(position.isStalemate())
       {
+         //clock.pause();
+         
          observer.onGameFinished("1/2-1/2", "Ahogado");
+         
+         return;
       }
       
       //TODO falta comprobante de tablas normales
@@ -175,7 +245,7 @@ public class Engine implements SearcherObserver
    
    public synchronized void forceMove()
    {
-      //TODO implementar
+      searcher.stop();
    }
    
    public void think()
@@ -229,28 +299,7 @@ public class Engine implements SearcherObserver
       {
          Movement selectedMove = pv[0];
          
-         //TODO comprobar si el movimiento es legal
-         position.doMove(selectedMove);
-         
-         System.err.println(position.toString());
-         
-         isCheckmate = position.isCheckmate();
-         isStalemate = position.isStalemate();
-         
-         //TODO falta comprobar por tablas normales
-         gameTurn = position.getTurn();
-         
-         observer.onMoveDone(selectedMove);
-         
-         if(isCheckmate)
-         {
-            String result = position.getTurn() == Colour.WHITE ? "0-1" : "1-0";
-            observer.onGameFinished(result, "Jaque mate");
-         }
-         else if(isStalemate)
-         {
-            observer.onGameFinished("1/2-1/2", "Ahogado");
-         }
+         this.doMove(selectedMove, true);
       }
       else
       {

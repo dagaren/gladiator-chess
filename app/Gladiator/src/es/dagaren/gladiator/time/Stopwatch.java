@@ -14,47 +14,53 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package es.dagaren.gladiator.communication;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+package es.dagaren.gladiator.time;
 
 /**
  * @author dagaren
  *
  */
-public class ConsoleDebugCommandController extends ConsoleCommandController
+public class Stopwatch
 {
-   @Override
-   public void sendCommand(String command) 
+   private long time = 0;
+   private long startTime = 0;
+   private States state = States.STOPPED;
+   
+   public synchronized void setTime(long time)
    {
-      debug(command + " >");
+      this.time = time;
       
-      super.sendCommand(command);
+      if(state == States.RUNNING)
+         this.startTime = System.currentTimeMillis();
    }
    
-   @Override
-   public void recieveCommand(String command) 
+   public synchronized long getTime()
    {
-      debug("< " + command);
+      if(state == States.STOPPED)
+      {
+         return this.time;
+      }
+      else if(state == States.RUNNING)
+      {
+         return time - (System.currentTimeMillis() - startTime);
+      }
       
-      super.recieveCommand(command);
+      return -1;
    }
    
-   private void debug(String command)
+   public synchronized void start()
    {
-      try
+      if(state == States.STOPPED)
       {
-         FileWriter fstream = new FileWriter("/tmp/gladiator_commands.txt", true);
-         BufferedWriter out = new BufferedWriter(fstream);
-         out.write(command + "\n");
-         out.close();
-         //System.err.println(command);
+         this.startTime = System.currentTimeMillis();
+         state = States.RUNNING;
       }
-      catch (Exception e)
-      {
-         System.err.println(command);
-      }
+   }
+   
+   public synchronized void stop()
+   {
+      this.time = this.getTime();
       
+      state = States.STOPPED;
    }
 }

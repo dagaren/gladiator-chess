@@ -16,6 +16,7 @@
  */
 package es.dagaren.gladiator.search;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,7 +24,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import es.dagaren.gladiator.evaluation.Evaluator;
 import es.dagaren.gladiator.notation.Notation;
+import es.dagaren.gladiator.representation.BitboardPosition;
+import es.dagaren.gladiator.representation.BitboardSee;
 import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.Movement;
 import es.dagaren.gladiator.representation.Position;
@@ -49,6 +53,9 @@ public class AlphaBetaSearcher extends Searcher
    //Comparador MVV LVA
    protected Comparator<Movement> mvvLvaComparator = new MvvLvaMoveComparator();
    
+   //Comparador de valor de movimeintos
+   protected Comparator<Movement> moveValueComparator = new MoveValueComparator();
+   
    //La variante principal
    protected PrincipalVariation principalVariation = new PrincipalVariation();
    
@@ -56,9 +63,11 @@ public class AlphaBetaSearcher extends Searcher
    protected int bestScore;
    
    //La tabla de transposicion
-   protected Table transpositionTable = new Table(52428800);
+   protected Table transpositionTable = new Table(100000);   //(52428800);
    
    protected Movement transpositionMove = null;
+   
+   protected List<Movement> movesForDelete = new ArrayList<Movement>(30);
    
    //Variables de estadísticas
    
@@ -76,11 +85,20 @@ public class AlphaBetaSearcher extends Searcher
    protected int aspirationSearchs = 0;
    //Número de búsquedas con ventana de aspiración que fallan
    protected int aspirationSearchsFails = 0;
-   
+   //Número de cortes producidos por aciertos en la tabla de transposición
    protected int transpositionCutoffs = 0;
-   
-   
-   
+   //Número de aciertos con el primer movimiento en la búsqueda
+   protected int firstMoveHits = 0;
+   //Número de aciertos en pvs
+   protected int pvsHits = 0;
+   //Número de fallos de pvs
+   protected int pvsFails = 0;
+   //Búsquedas con movimiento de transposición
+   protected int withTranspositionMove = 0;
+   //Búsquedas sin movimiento de transposición
+   protected int withoutTranspositionMove = 0;
+   //Futility prunings
+   protected int futilityPrunings = 0;
    
    
    
@@ -100,9 +118,18 @@ public class AlphaBetaSearcher extends Searcher
       nodes = 0;
       qnodes = 0;
       transpositionCutoffs = 0;
+      firstMoveHits = 0;
       
       aspirationSearchs = 0;
       aspirationSearchsFails = 0;
+      
+      pvsHits  = 0;
+      pvsFails = 0;
+      
+      withTranspositionMove = 0;
+      withoutTranspositionMove = 0;
+      
+      futilityPrunings = 0;
       
       bestPrincipalVariation = new Movement[0];
       
@@ -111,7 +138,6 @@ public class AlphaBetaSearcher extends Searcher
       //Se implementa la profundidad iterativa
       for(depth = 1; depth <= depthLimit; depth++)
       {
-         System.err.println("Inicio de la iteración " + depth);
          iterationNodes = 0;
          
          long iterationInitTime = System.currentTimeMillis();
@@ -120,7 +146,11 @@ public class AlphaBetaSearcher extends Searcher
          beta = score + windowSize;
          
          aspirationSearchs++;
+         
          score = alphaBeta(position, alfa, beta, 0, depth);
+         
+         if(score == EXIT_SCORE)
+            break;
 
          if(score <= alfa || score >= beta)
          {
@@ -132,6 +162,9 @@ public class AlphaBetaSearcher extends Searcher
             score = alphaBeta(position, alfa, beta, 0, depth);
          }
          
+         if(score == EXIT_SCORE)
+            break;
+         
          bestPrincipalVariation = principalVariation.getPrincipalVariation();
          
          int nodesPercent = (nodes + qnodes) > 0 ? ((100 * nodes) / (nodes + qnodes)) : 0;
@@ -139,6 +172,8 @@ public class AlphaBetaSearcher extends Searcher
          int cutoffsPercent = (cutoffs + nodes) > 0 ? ((100 * cutoffs) / (cutoffs + nodes)) : 0;
          int qcutoffsPercent = (qcutoffs + qnodes) > 0 ? ((100 * qcutoffs) / (qcutoffs + qnodes)) : 0;
          int aspirationFailsPercent = aspirationSearchs > 0 ? (100 * aspirationSearchsFails) / aspirationSearchs : 0;
+         int pvsHitsPercent = (pvsHits + pvsFails) > 0 ? (100 * pvsHits) / (pvsHits + pvsFails) : 0;
+         int withTranspositionPercent = (withTranspositionMove + withoutTranspositionMove) > 0 ? (100 * withTranspositionMove) / (withTranspositionMove + withoutTranspositionMove) : 0;
          System.err.println("Estadísticas búsquedas en profundidad " + depth + ":");
          System.err.println("------------------------------------------");
          System.err.println(" * Nodos recorridos: " + nodes + "(" + nodesPercent + "%)");
@@ -148,34 +183,31 @@ public class AlphaBetaSearcher extends Searcher
          System.err.println(" * Fallos en ventana de aspiración: " + aspirationSearchsFails + "(" + aspirationFailsPercent  +"%)");
          System.err.println(" * Tabla de tranposición: Aciertos: " + transpositionTable.getHits() + ", Fallos: " + transpositionTable.getMisses());
          System.err.println(" * Cortes por tabla de transposición: " + transpositionCutoffs);
+         System.err.println(" * Aciertos PVS: " + pvsHits + "(" + pvsHitsPercent + "%)");
+         System.err.println(" * Fallos   PVS: " + pvsFails + "(" + (100 - pvsHitsPercent) + "%)");
+         System.err.println(" * Busquedas con transposicion: " + withTranspositionMove + "(" + withTranspositionPercent + "%)");
+         System.err.println(" * Busquedas sin transposicion: " + withoutTranspositionMove + "(" + (100 - withTranspositionPercent) + "%)");
+         System.err.println(" * Futility prunings: " + futilityPrunings);
+         
          
          System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime) / 1000));
-         /*
-         if(principalVariation.size() > 0)
-            System.err.println(" * Mejor movimiento encontrado: " + Notation.toString(principalVariation.get(0)));
-         System.err.print(" * VP: ");
-         for(Movement m : principalVariation)
-         {
-           System.err.print(" " + Notation.toString(m));
-         }
-         System.err.println("");
-         */
          
-         //Si el valor es mate se devuelve
+         //Si el valor es mate se termina la búsqueda
          if(score == CHECKMATE_SCORE || score == -CHECKMATE_SCORE)
          {
-            System.err.println("Checkmate score");
             break;
-         }
-         
+         }  
       }
-      System.err.println("Fin de busqueda");
       
    }
    
    public int alphaBeta(Position position, int alpha, int beta, int currentDepth, int remainingPlies)
    {
       principalVariation.initDepth(currentDepth);
+      
+      //Se comprueba si la búsqueda permanece activa. En
+      //caso contrario, se devuelve el valor de fin de búsqueda
+      if(!search) return EXIT_SCORE;
       
       transpositionMove = null;
       
@@ -195,7 +227,7 @@ public class AlphaBetaSearcher extends Searcher
          Integer value = transpositionEntry.probe(remainingPlies, alpha, beta);
          if(value != null)
          {
-            //principalVariation.saveInDepth(transpositionEntry.getBestMove(), currentDepth);
+            principalVariation.saveInDepth(transpositionEntry.getBestMove(), currentDepth);
 
             if(transpositionEntry.getType() != Type.EXACT)
             {
@@ -207,16 +239,23 @@ public class AlphaBetaSearcher extends Searcher
             transpositionMove = transpositionEntry.getBestMove();
       }
       
+      if(transpositionMove != null)
+         withTranspositionMove++;
+      else
+         withoutTranspositionMove++;
+      
       //TODO Comprobación en la tabla de finales
       
       //Se generan los movimientos
-      List<Movement> moves = position.getMovements();
+      List<Movement> moves = getMovesList(currentDepth); 
+      
+      position.getMoves(moves);
       
       if(moves.size() == 0)
       {
          //Si no hay ningún movimiento legal en la posición
          //quiere decir que la posición es tablas por ahogado
-         //o jaque mate dependiendo de si la posición es de jaque
+         //o jaque mate
          if(position.isInCheck(turn))
          {
             //Es jaque mate
@@ -245,25 +284,74 @@ public class AlphaBetaSearcher extends Searcher
       //Se ordenan los movimientos
       this.sortMoves(moves, position, currentDepth);
       
+      boolean isFirstMove = true; 
+      
+      int staticEval = 0;
+      boolean onFutility = false;
+      if(remainingPlies == 1)
+      {
+         onFutility = true;
+         staticEval = evaluator.evaluate(position);
+      }
+     
+
       //Se itera a través de cada movimiento y se realiza
       //la búsqueda en las posiciones que resultan
       for(Movement move: moves)
       {  
+         //Futility pruning en el último nivel antes de quiescence
+         if(onFutility &&
+            !isFirstMove && 
+            move.getDestinationPiece() != null)
+         {
+            if((staticEval + 125) <= alfa)
+            {
+               //System.err.println("Cortando por futility pruning");
+               futilityPrunings++;
+               continue;
+            }
+         }
+         
+         //Se hace el siguiente movimiento en la lista
          position.doMove(move);
          
-         //Se calcula la evaluación del movimiento
-         int score = - alphaBeta(position, -beta, -alpha, currentDepth + 1, remainingPlies - 1);
-      
+         
+         //Principal Variation Search
+         int score;
+         
+         if(isFirstMove)
+         {
+            score = - alphaBeta(position, -beta, -alpha, currentDepth + 1, remainingPlies - 1);
+            
+            isFirstMove = false;
+         }
+         else
+         {
+            score = - alphaBeta(position, -alpha -1 , -alpha, currentDepth + 1, remainingPlies - 1);
+            
+            if(score > alpha)
+            {
+               pvsFails++;
+               score = - alphaBeta(position, -beta, -alpha, currentDepth + 1, remainingPlies - 1);
+            }
+            else
+            {
+               pvsHits++;  
+            }
+         }
+         
          //Se deshace el movimiento
          position.undoMove(move);
          
+         if(Math.abs(score) == EXIT_SCORE)
+            return EXIT_SCORE;
+         
          if(score >= beta)
          {
-            //Si la puntuación supera beta
-            //se produce un corte
+            //Al superar el valor de beta se produce un corte
             cutoffs++;
             
-            //Se añade el movimiento como movimiento 'killer para la profundidad'
+            //Se añade el movimiento como movimiento 'killer' para la profundidad
             if(!move.equals(killerMoves[currentDepth][0]) && !move.equals(killerMoves[currentDepth][1]))
             {
                killerMoves[currentDepth][1] = killerMoves[currentDepth][0];
@@ -283,17 +371,18 @@ public class AlphaBetaSearcher extends Searcher
             nodeType = Entry.Type.EXACT;
             bestMove = move;
             
-            //si la puntuación devuelta supera alfa
-            //se ha encontrado un movimiento mejor
+            //Se ha encontrado un movimiento mejor para la posición,
+            //se actualiza el valor alfa y se guarda el movimiento
             alpha = score;
             
             numUpdates++;
             
             principalVariation.saveInDepth(move, currentDepth);
             
-            
             if(currentDepth == 0)
             {
+               //Se ha encontrado un mejor movimiento en la posicion
+               //inicial de búsqueda, por lo que se publica
                bestScore = score;
                long time = System.currentTimeMillis();
                publishInfo((time - initTime) / 10, visitedNodes, depth, bestScore, principalVariation.getPrincipalVariation());
@@ -305,6 +394,8 @@ public class AlphaBetaSearcher extends Searcher
       transpositionTable.save(position.getZobristKey().getKey(), 
                            remainingPlies, alpha, nodeType, 0, bestMove);
       
+      //No se ha encontrado ningún movimiento que mejore el valor de alfa,
+      //por lo que se devuelve
       return alpha;
    }
    
@@ -319,14 +410,15 @@ public class AlphaBetaSearcher extends Searcher
       qnodes++;
       
       //Se generan los movimientos
-      List<Movement> moves = position.getMovements();
-      List<Movement> captureMoves = position.getCaptureMovements();
+      List<Movement> moves = getMovesList(currentDepth); 
+
+      position.getMoves(moves);
       
       if(moves.size() == 0)
       {
          //Si no hay ningún movimiento legal en la posición
          //quiere decir que la posición es tablas por ahogado
-         //o jaque mate dependiendo de si la posición es de jaque
+         //o jaque mate
          if(position.isInCheck(turn))
          {
             //Es jaque mate
@@ -342,13 +434,8 @@ public class AlphaBetaSearcher extends Searcher
       //Se calcula la evaluación estática de la posicion
       int score = evaluator.evaluate(position);
       
-
-      if(captureMoves.size() == 0)
-      {
-         return score;
-      }
-      
       //Se intenta actualizar alfa con el puntaje devuelto
+      //por la evaluación estática.
       //Esto es necesario ya que como solo se van a comprobar 
       //los movimientos de captura es necesario establecer 
       //este valor para que se vea si las capturas generan
@@ -358,19 +445,17 @@ public class AlphaBetaSearcher extends Searcher
       {  
          return beta;
       }
-      if(alpha < score)
+      if(score >= alpha)
       {
          alpha = score;
       }
       
-      
       //Se ordenan los movimientos
-      this.sortQuiescenceMoves(captureMoves, position);
-      
-      
+      this.sortQuiescenceMoves(moves, position);
+
       //Se itera a través de cada movimiento de captura y se realiza
       //la búsqueda en las posiciones que resultan
-      for(Movement move: captureMoves)
+      for(Movement move: moves)
       {
          //Se realiza el siguiente movimiento en la lista
          position.doMove(move);
@@ -398,55 +483,84 @@ public class AlphaBetaSearcher extends Searcher
       }
       
       return alpha;
-      
    }
    
    
    public void sortMoves(List<Movement> moves, Position position, int currentDepth)
-   {    
-      //Se ordenan las capturas por MVV/LVA
-      List<Movement> captures = position.getCaptureMovements();
-      List<Movement> nonCaptures = position.getNonCaptureMovements();
+   {  
       
-      sortQuiescenceMoves(captures, position);
-      
-      moves.clear();
-      moves.addAll(captures);
-      moves.addAll(nonCaptures);
-      
-      //Se ordenan por killer moves
-      Movement m = null;
-      if(moves.contains(killerMoves[currentDepth][0]))
+      for(Movement move: moves)
       {
-         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth][0]));
-         //System.err.println("===> Se ordena un movimiento killer 0 en pronfundidad " + currentDepth + " : " + Notation.toString(m));         
-         moves.add(0, m);
-      }
-      if(moves.contains(killerMoves[currentDepth][1]))
-      {
- 
-         m = moves.remove(moves.lastIndexOf(killerMoves[currentDepth][1]));
-         //System.err.println("===> Se ordena un movimiento killer 1 en pronfundidad " + currentDepth + " : " + Notation.toString(m)); 
-         moves.add(0, m);
-      }
-      ///////////////////////////////
-      
-      //Se añade el movimiento de la tabla de tranposicion en caso de que haya
-      if(transpositionMove != null)
-      {
-         if(moves.contains(transpositionMove))
+         //
+         if(move.getDestinationPiece() != null)
          {
-            //System.err.println("** Se pone movimiento de la tabla de tranposicion primero **");
-            m = moves.remove(moves.lastIndexOf(transpositionMove));
-            moves.add(0, m);
+            //Si es una captura se calcula su valor see
+            move.setValue(BitboardSee.getValue((BitboardPosition)position, 
+                                                move.getSource(), 
+                                                move.getDestination(), 
+                                                move.getDestinationPiece().genericPiece));
          }
+         else
+         {
+            //Se le asigna un valor al movimiento dependiente de la
+            //casilla de destino y la pieza
+            move.setValue(evaluator.evaluateMove(move));
+         }
+         
+         //A los movimientos que esten en los killer se les da un valor alto
+         if(move.equals(killerMoves[currentDepth][0]))
+         {
+            move.setValue(1000);
+         }
+         if(move.equals(killerMoves[currentDepth][1]))
+         {
+            move.setValue(1000);
+         }
+         
+         //Si es el movimiento encontrado en la tabla de transposición se le da un
+         //valor muy alto
+         if(transpositionMove != null)
+         {
+            if(move.equals(transpositionMove))
+            {
+               move.setValue(20000);
+            }
+         }
+
       }
+      
+      //Se ordenan los movimientos en función del valor que se le ha asignado
+      Collections.sort(moves, moveValueComparator);
       
    }
    
    public void sortQuiescenceMoves(List<Movement> moves, Position position)
    {
-      Collections.sort(moves, mvvLvaComparator);
+
+      movesForDelete.clear();
+      for(Movement move: moves)
+      {
+         if(move.getDestinationPiece() != null)
+         {
+            //Si es una captura se calcula su valor see
+            move.setValue(BitboardSee.getValue((BitboardPosition)position, 
+                                                move.getSource(), 
+                                                move.getDestination(), 
+                                                move.getDestinationPiece().genericPiece));
+            if(move.getValue() < 0)
+               movesForDelete.add(move);
+         }
+         else
+         {
+            //Si no es una captura se elimina de la lista
+            movesForDelete.add(move);
+         }
+      }
+      moves.removeAll(movesForDelete);
+
+      
+    //Se ordenan los movimientos en función del valor que se le ha asignado
+      Collections.sort(moves, moveValueComparator);
    }
    
    @Override
