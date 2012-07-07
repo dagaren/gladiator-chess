@@ -19,6 +19,7 @@ package es.dagaren.gladiator.testing.time;
 import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import es.dagaren.gladiator.time.Stopwatch;
@@ -27,6 +28,7 @@ import es.dagaren.gladiator.time.Stopwatch;
  * @author dagaren
  *
  */
+@Ignore
 public class StopwatchTest
 {
 

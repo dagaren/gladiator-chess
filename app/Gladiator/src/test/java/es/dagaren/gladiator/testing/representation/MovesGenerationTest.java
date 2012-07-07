@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import es.dagaren.gladiator.notation.Notation;
@@ -817,6 +818,7 @@ public class MovesGenerationTest
       checkMoves();
    }
    
+   @Ignore
    @Test
    public void checkTest25()
    {
@@ -837,6 +839,7 @@ public class MovesGenerationTest
       checkMoves();
    }
    
+   @Ignore
    @Test
    public void checkTest26()
    {

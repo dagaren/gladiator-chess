@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import es.dagaren.gladiator.time.Clock;
@@ -32,6 +33,7 @@ import es.dagaren.gladiator.time.TimeControl;
  * @author dagaren
  *
  */
+@Ignore
 public class ClockTest
 {
    public Clock clock;
@@ -45,6 +47,7 @@ public class ClockTest
    @Test
    public void test()
    {
+	  
       clock = new Clock();
       TimeControl tc = new Quota(30, 1800, 5, IncrementTypes.FISCHER);
       

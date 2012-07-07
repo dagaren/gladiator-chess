@@ -75,7 +75,7 @@ public class ZobristKeyTest
       Position position = new BitboardPosition();
       position.loadFen(fen);
       
-      this.checkPosition(position, 5);
+      this.checkPosition(position, 1);
    }
    
    
