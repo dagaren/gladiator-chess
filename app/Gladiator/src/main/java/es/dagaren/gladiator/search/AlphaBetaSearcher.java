@@ -44,7 +44,7 @@ public class AlphaBetaSearcher extends Searcher
    protected long numUpdates;
    
    //Constantes de búsqueda
-   protected final int INITIAL_ALFA = -10000 - 1;
+   protected final int INITIAL_ALPHA = -10000 - 1;
    protected final int INITIAL_BETA =  10000 + 1;
    
    //Arrays de movimientos killer;
@@ -85,6 +85,8 @@ public class AlphaBetaSearcher extends Searcher
    protected int aspirationSearchs = 0;
    //Número de búsquedas con ventana de aspiración que fallan
    protected int aspirationSearchsFails = 0;
+   //Número de búsquedas con ventana de aspiración que fallan por inestabilidad
+   protected int aspirationSearchInstabilityFails = 0;
    //Número de cortes producidos por aciertos en la tabla de transposición
    protected int transpositionCutoffs = 0;
    //Número de aciertos con el primer movimiento en la búsqueda
@@ -102,7 +104,7 @@ public class AlphaBetaSearcher extends Searcher
    
    
    
-   int alfa = 0;
+   int alpha = 0;
    int beta = 0;
    
    int windowSize = 50;
@@ -112,21 +114,22 @@ public class AlphaBetaSearcher extends Searcher
    {
       numUpdates = 0;
       
-      visitedNodes = 0;
-      cutoffs = 0;
-      qcutoffs = 0;
-      nodes = 0;
-      qnodes = 0;
-      transpositionCutoffs = 0;
+      visitedNodes  = 0;
+      cutoffs       = 0;
+      qcutoffs      = 0;
+      nodes         = 0;
+      qnodes        = 0;
       firstMoveHits = 0;
+      transpositionCutoffs = 0;
       
-      aspirationSearchs = 0;
-      aspirationSearchsFails = 0;
+      aspirationSearchs                = 0;
+      aspirationSearchsFails           = 0;
+      aspirationSearchInstabilityFails = 0;
       
       pvsHits  = 0;
       pvsFails = 0;
       
-      withTranspositionMove = 0;
+      withTranspositionMove    = 0;
       withoutTranspositionMove = 0;
       
       futilityPrunings = 0;
@@ -138,32 +141,62 @@ public class AlphaBetaSearcher extends Searcher
       //Se implementa la profundidad iterativa
       for(depth = 1; depth <= depthLimit; depth++)
       {
-         iterationNodes = 0;
-         
          long iterationInitTime = System.currentTimeMillis();
          
-         alfa = score - windowSize;
-         beta = score + windowSize;
+         iterationNodes = 0;
+         
+         //Se calculan los valores de alpha y beta iniciales
+         //para utilizando ventanas de aspiración
+         alpha = score - windowSize;
+         beta  = score + windowSize;
          
          aspirationSearchs++;
          
-         score = alphaBeta(position, alfa, beta, 0, depth);
+         score = alphaBeta(position, alpha, beta, 0, depth);
          
          if(score == EXIT_SCORE)
             break;
 
-         if(score <= alfa || score >= beta)
+         if(score <= alpha || score >= beta) //Se ha producido un corte
          {
+            //Se ha producido un corte en la búsqueda con ventanas 
+            //de aspiración, es necesario repetir la búsqueda.
             aspirationSearchsFails++;
             
-            alfa = INITIAL_ALFA;
-            beta = INITIAL_BETA;
+            if(score <= alpha) //Es un corte por lo bajo
+            {
+               alpha = INITIAL_ALPHA;
+               beta  = score;
+            }
+            else if(score >= beta) //Es un corte por lo alto
+            {
+               alpha = score;
+               beta  = INITIAL_BETA;
+            }
             
-            score = alphaBeta(position, alfa, beta, 0, depth);
+            score = alphaBeta(position, alpha, beta, 0, depth);
+            
+            if(score == EXIT_SCORE)
+               break;
          }
          
-         if(score == EXIT_SCORE)
-            break;
+         if(score <= alpha || score >= beta) //Se ha producido segundo corte
+         {
+            aspirationSearchInstabilityFails++;
+            
+            //Se ha producido una situación extraña en la que la segunda
+            //búsqueda de la ventana de aspiración también falla, debido
+            //a la denominada 'inestabilidad de búsqueda'. Como solución 
+            //se vuelve a repetir la búsqueda con los valores iniciales 
+            //de alpha y beta
+            alpha = INITIAL_ALPHA;
+            beta  = INITIAL_BETA;
+            
+            score = alphaBeta(position, alpha, beta, 0, depth);
+            
+            if(score == EXIT_SCORE)
+               break;
+         }
          
          bestPrincipalVariation = principalVariation.getPrincipalVariation();
          
@@ -181,6 +214,7 @@ public class AlphaBetaSearcher extends Searcher
          System.err.println(" * Cortes producidos en nodos normales: " + cutoffs + "(" + cutoffsPercent  +"%)");
          System.err.println(" * Cortes producidos en nodos quiescence: " + qcutoffs + "(" + qcutoffsPercent  +"%)");
          System.err.println(" * Fallos en ventana de aspiración: " + aspirationSearchsFails + "(" + aspirationFailsPercent  +"%)");
+         System.err.println(" * Fallos en ventana de aspiración por inestabilidad: " + aspirationSearchInstabilityFails);
          System.err.println(" * Tabla de tranposición: Aciertos: " + transpositionTable.getHits() + ", Fallos: " + transpositionTable.getMisses());
          System.err.println(" * Cortes por tabla de transposición: " + transpositionCutoffs);
          System.err.println(" * Aciertos PVS: " + pvsHits + "(" + pvsHitsPercent + "%)");
@@ -304,7 +338,7 @@ public class AlphaBetaSearcher extends Searcher
             !isFirstMove && 
             move.getDestinationPiece() != null)
          {
-            if((staticEval + 125) <= alfa)
+            if((staticEval + 125) <= alpha)
             {
                //System.err.println("Cortando por futility pruning");
                futilityPrunings++;
