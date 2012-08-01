@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.representation.BitboardPosition;
 import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.GenericPiece;
@@ -36,7 +38,8 @@ import es.dagaren.gladiator.representation.Square;
  */
 public class ExtendedPositionDescription
 {
-
+   private static Logger logger = Logger.getLogger(ExtendedPositionDescription.class);
+   
    protected Position position;
 
    protected Map<String, List<String>> operationsMap = new HashMap<String, List<String>>();
@@ -201,7 +204,7 @@ public class ExtendedPositionDescription
       }
       else
       {
-         System.err.println("La cadena '" + epdString + "' no es un epd correcto");
+         logger.error("La cadena '" + epdString + "' no es un epd correcto");
          
          return null;
       }

@@ -24,6 +24,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.evaluation.Evaluator;
 import es.dagaren.gladiator.notation.Notation;
 import es.dagaren.gladiator.representation.BitboardPosition;
@@ -41,6 +43,8 @@ import es.dagaren.gladiator.transposition.Entry.Type;
  */
 public class AlphaBetaSearcher extends Searcher
 {
+   private Logger logger = Logger.getLogger(AlphaBetaSearcher.class);
+   
    protected long numUpdates;
    
    //Constantes de búsqueda
@@ -207,24 +211,25 @@ public class AlphaBetaSearcher extends Searcher
          int aspirationFailsPercent = aspirationSearchs > 0 ? (100 * aspirationSearchsFails) / aspirationSearchs : 0;
          int pvsHitsPercent = (pvsHits + pvsFails) > 0 ? (100 * pvsHits) / (pvsHits + pvsFails) : 0;
          int withTranspositionPercent = (withTranspositionMove + withoutTranspositionMove) > 0 ? (100 * withTranspositionMove) / (withTranspositionMove + withoutTranspositionMove) : 0;
-         System.err.println("Estadísticas búsquedas en profundidad " + depth + ":");
-         System.err.println("------------------------------------------");
-         System.err.println(" * Nodos recorridos: " + nodes + "(" + nodesPercent + "%)");
-         System.err.println(" * Nodos quiescende recorridos: " + qnodes + "(" + qnodesPercent + "%)");
-         System.err.println(" * Cortes producidos en nodos normales: " + cutoffs + "(" + cutoffsPercent  +"%)");
-         System.err.println(" * Cortes producidos en nodos quiescence: " + qcutoffs + "(" + qcutoffsPercent  +"%)");
-         System.err.println(" * Fallos en ventana de aspiración: " + aspirationSearchsFails + "(" + aspirationFailsPercent  +"%)");
-         System.err.println(" * Fallos en ventana de aspiración por inestabilidad: " + aspirationSearchInstabilityFails);
-         System.err.println(" * Tabla de tranposición: Aciertos: " + transpositionTable.getHits() + ", Fallos: " + transpositionTable.getMisses());
-         System.err.println(" * Cortes por tabla de transposición: " + transpositionCutoffs);
-         System.err.println(" * Aciertos PVS: " + pvsHits + "(" + pvsHitsPercent + "%)");
-         System.err.println(" * Fallos   PVS: " + pvsFails + "(" + (100 - pvsHitsPercent) + "%)");
-         System.err.println(" * Busquedas con transposicion: " + withTranspositionMove + "(" + withTranspositionPercent + "%)");
-         System.err.println(" * Busquedas sin transposicion: " + withoutTranspositionMove + "(" + (100 - withTranspositionPercent) + "%)");
-         System.err.println(" * Futility prunings: " + futilityPrunings);
+         
+         logger.debug("Estadísticas búsquedas en profundidad " + depth + ":");
+         logger.debug("------------------------------------------");
+         logger.debug(" * Nodos recorridos: " + nodes + "(" + nodesPercent + "%)");
+         logger.debug(" * Nodos quiescende recorridos: " + qnodes + "(" + qnodesPercent + "%)");
+         logger.debug(" * Cortes producidos en nodos normales: " + cutoffs + "(" + cutoffsPercent  +"%)");
+         logger.debug(" * Cortes producidos en nodos quiescence: " + qcutoffs + "(" + qcutoffsPercent  +"%)");
+         logger.debug(" * Fallos en ventana de aspiración: " + aspirationSearchsFails + "(" + aspirationFailsPercent  +"%)");
+         logger.debug(" * Fallos en ventana de aspiración por inestabilidad: " + aspirationSearchInstabilityFails);
+         logger.debug(" * Tabla de tranposición: Aciertos: " + transpositionTable.getHits() + ", Fallos: " + transpositionTable.getMisses());
+         logger.debug(" * Cortes por tabla de transposición: " + transpositionCutoffs);
+         logger.debug(" * Aciertos PVS: " + pvsHits + "(" + pvsHitsPercent + "%)");
+         logger.debug(" * Fallos   PVS: " + pvsFails + "(" + (100 - pvsHitsPercent) + "%)");
+         logger.debug(" * Busquedas con transposicion: " + withTranspositionMove + "(" + withTranspositionPercent + "%)");
+         logger.debug(" * Busquedas sin transposicion: " + withoutTranspositionMove + "(" + (100 - withTranspositionPercent) + "%)");
+         logger.debug(" * Futility prunings: " + futilityPrunings);
          
          
-         System.err.println(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime) / 1000));
+         logger.debug(" * Tiempo iteración: " + ((System.currentTimeMillis() - iterationInitTime) / 1000));
          
          //Si el valor es mate se termina la búsqueda
          if(score == CHECKMATE_SCORE || score == -CHECKMATE_SCORE)
@@ -340,7 +345,6 @@ public class AlphaBetaSearcher extends Searcher
          {
             if((staticEval + 125) <= alpha)
             {
-               //System.err.println("Cortando por futility pruning");
                futilityPrunings++;
                continue;
             }

@@ -19,6 +19,8 @@ package es.dagaren.gladiator.engine;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.representation.BitboardPosition;
 import es.dagaren.gladiator.representation.Colour;
 import es.dagaren.gladiator.representation.Movement;
@@ -36,6 +38,8 @@ import es.dagaren.gladiator.time.TimeControl;
  */
 public class Engine implements SearcherObserver
 {
+   private Logger logger = Logger.getLogger(Engine.class);
+   
    protected final String name    = "Gladiator";
    protected final String version = "0.0.6";
    protected final String rating  = "(Unknown)";
@@ -303,8 +307,7 @@ public class Engine implements SearcherObserver
       }
       else
       {
-         System.err.println("[Engine.onSearchFinished] ERROR: LA VARIANTE PRINCIPAL ES NULA O VACIA");
-         //System.exit(0);
+         logger.error("[onSearchFinished] ERROR: La variante principal es nula o está vacia");
       }
    }
 

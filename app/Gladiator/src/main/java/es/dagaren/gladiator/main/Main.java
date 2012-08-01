@@ -16,9 +16,10 @@
  */
 package es.dagaren.gladiator.main;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.communication.CommandController;
 import es.dagaren.gladiator.communication.ConsoleCommandController;
-import es.dagaren.gladiator.communication.ConsoleDebugCommandController;
 import es.dagaren.gladiator.communication.xboard.EngineAdapter;
 import es.dagaren.gladiator.communication.xboard.EngineController;
 import es.dagaren.gladiator.engine.Engine;
@@ -33,6 +34,8 @@ import es.dagaren.gladiator.representation.Position;
 public class Main
 {
 
+   private static Logger logger = Logger.getLogger(Main.class);
+   
    /**
     * @param args
     */
@@ -58,8 +61,10 @@ public class Main
    {
       Position position = new BitboardPosition();
       boolean result = position.loadFen(fen);
-      if(!result)
+      if(!result) {
          System.err.println("Error evaluando posición: cadena fen incorrecta");
+         return;
+      }
       
       Evaluator eval = new Evaluator();
       int score = eval.evaluate(position);
@@ -74,7 +79,7 @@ public class Main
       Engine gladiatorEngine = new Engine();
       
       //Se crea el controlador de comandos por consola
-      CommandController commandController = new ConsoleDebugCommandController();
+      CommandController commandController = new ConsoleCommandController();
       //CommandController commandController = new ConsoleCommandController();
       
       //Se crea el controlador xboard
@@ -107,7 +112,6 @@ public class Main
       //Se para el controlador de comandos
       commandController.stop();
       
-      
-      System.err.println("TERMINACIÓN NORMAL DE PROGRAMA");
+      logger.info("Terminación normal de programa");
    }
 }

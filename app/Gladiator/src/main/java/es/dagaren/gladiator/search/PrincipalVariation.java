@@ -18,6 +18,8 @@ package es.dagaren.gladiator.search;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.notation.Notation;
 import es.dagaren.gladiator.representation.Movement;
 
@@ -27,6 +29,8 @@ import es.dagaren.gladiator.representation.Movement;
  */
 public class PrincipalVariation
 {
+   private Logger logger = Logger.getLogger(PrincipalVariation.class);
+   
    private Movement[][] pv;
    private int[] pvl;
    private Movement[] temp;
@@ -73,7 +77,8 @@ public class PrincipalVariation
       }
       else
       {
-         System.err.println("Retornando array vacio");
+        logger.error("Retornando array vacio");
+        
         return new Movement[0];
       }
    }

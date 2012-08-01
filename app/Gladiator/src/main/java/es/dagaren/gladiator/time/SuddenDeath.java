@@ -16,6 +16,8 @@
  */
 package es.dagaren.gladiator.time;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.representation.Colour;
 
 /**
@@ -24,6 +26,8 @@ import es.dagaren.gladiator.representation.Colour;
  */
 public class SuddenDeath implements TimeControl
 {
+   private Logger logger = Logger.getLogger(SuddenDeath.class);
+   
    private long time = 0;
    private long increment = 0;
    private IncrementTypes incrementType = null;
@@ -34,7 +38,7 @@ public class SuddenDeath implements TimeControl
       this.increment = increment;
       this.incrementType = incrementType;
       
-      System.err.println("Creando sudden death:" +
+      logger.debug("Creando sudden death:" +
             ", tiempo: " + this.time +
             ", incremento: " + this.increment +
             ", tipo: " + this.incrementType.name());

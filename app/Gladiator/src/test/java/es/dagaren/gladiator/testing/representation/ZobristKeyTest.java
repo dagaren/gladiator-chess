@@ -47,26 +47,23 @@ public class ZobristKeyTest
          
       List<Movement> moves = position.getMovements();
       
-      //System.out.println("> " + position.getZobristKey().getKey());
-      
       long key1 = position.getZobristKey().getKey();
-      
-      //System.out.println("Level: " + level);
+
       for(Movement move : moves)
       {  
          position.doMove(move);
          
          long key2 = position.getZobristKey().getKey();
-         
+   
+         assertNotSame("La claves zobrist coincide antes y después de hacer un movimiento", key1, key2);
+   
          this.checkPosition(position, level - 1);
-         
-         //assertNotSame("La claves zobrist coincide antes y después de hacer un movimiento", key1, key2);
          
          position.undoMove(move);
          
          key2 = position.getZobristKey().getKey();
          
-         //assertEquals("La clave zobrist no coincide antes y después", key1, key2);
+         assertEquals("La clave zobrist no coincide antes y después", key1, key2);
       }
    }
    

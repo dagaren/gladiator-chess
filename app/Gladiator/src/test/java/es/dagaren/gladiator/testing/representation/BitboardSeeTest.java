@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 
+import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import es.dagaren.gladiator.representation.BitboardPosition;
@@ -40,6 +41,8 @@ import es.dagaren.gladiator.notation.Notation;
  */
 public class BitboardSeeTest
 {
+   private Logger logger = Logger.getLogger(BitboardSeeTest.class);
+   
    @Test
    public void seeTest()
    {  
@@ -47,8 +50,6 @@ public class BitboardSeeTest
       
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
       
       int value = BitboardSee.getValue(position, Square.e1, Square.e5, GenericPiece.PAWN);
   
@@ -66,8 +67,6 @@ public class BitboardSeeTest
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
       
-      System.out.println(position.toString());
-      
       int value = BitboardSee.getValue(position, Square.d3, Square.e5, GenericPiece.PAWN);
   
       int expectedValue = -225;
@@ -83,8 +82,6 @@ public class BitboardSeeTest
       
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
       
       int value = BitboardSee.getValue(position, Square.d3, Square.e5, GenericPiece.PAWN);
   
@@ -102,8 +99,6 @@ public class BitboardSeeTest
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
       
-      System.out.println(position.toString());
-      
       int value = BitboardSee.getValue(position, Square.b3, Square.b6, GenericPiece.PAWN);
   
       int expectedValue = -900;
@@ -118,8 +113,6 @@ public class BitboardSeeTest
       
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
       
       int value = BitboardSee.getValue(position, Square.e6, Square.d5, GenericPiece.PAWN);
   
@@ -136,8 +129,6 @@ public class BitboardSeeTest
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
       
-      System.out.println(position.toString());
-      
       int value = BitboardSee.getValue(position, Square.e6, Square.d5, GenericPiece.PAWN);
   
       int expectedValue = 0;
@@ -152,8 +143,6 @@ public class BitboardSeeTest
       
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
       
       int value = BitboardSee.getValue(position, Square.e5, Square.d6, GenericPiece.PAWN);
   
@@ -170,8 +159,6 @@ public class BitboardSeeTest
       BitboardPosition position = new BitboardPosition();
       position.loadFen(originalFen);
       
-      System.out.println(position.toString());
-      
       int value = BitboardSee.getValue(position, Square.e2, Square.e5, GenericPiece.PAWN);
   
       int expectedValue = -400;
@@ -180,117 +167,4 @@ public class BitboardSeeTest
       
    }
    
-   @Test public void seeTest9()
-   {
-      
-      
-      String originalFen = "3k4/8/4p3/3P4/2P5/8/6q1/3K4 b - - 0 1";
-      
-      BitboardPosition position = new BitboardPosition();
-      position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
-      
-      List<Movement> movesList = new ArrayList<Movement>();
-      position.getMoves(movesList);
-      
-      System.out.println("Movimientos antes de la ordenación");
-      int index = 0;
-      int numMoves = movesList.size();
-      for(Movement m : movesList)
-      {
-         System.out.print(Notation.toString(m));
-         if(++index < numMoves)
-            System.out.print(", ");
-      }
-      System.out.println("");
-      
-      
-      for(Movement move: movesList)
-      {
-         //
-         if(move.getDestinationPiece() != null)
-         {
-            //Si es una captura se calcula su valor see
-            move.setValue(BitboardSee.getValue((BitboardPosition)position, 
-                                                move.getSource(), 
-                                                move.getDestination(), 
-                                                move.getDestinationPiece().genericPiece));
-         }
-      }
-      Collections.sort(movesList, new MoveValueComparator());
-      
-      index = 0;
-      System.out.println("Movimientos después de la ordenación");
-      for(Movement m : movesList)
-      {
-         System.out.print(Notation.toString(m));
-         System.out.print(":" + m.getValue());
-         if(++index < numMoves)
-            System.out.print(", ");
-      }
-      System.out.println("");
-      
-   }
-   
-   @Test public void seeTest10()
-   {
-      
-      
-      String originalFen = "3k4/8/4p3/3P4/2P5/8/6q1/3K4 b - - 0 1";
-      
-      BitboardPosition position = new BitboardPosition();
-      position.loadFen(originalFen);
-      
-      System.out.println(position.toString());
-      
-      List<Movement> movesList = new ArrayList<Movement>();
-      position.getMoves(movesList);
-      
-      System.out.println("Movimientos antes de la ordenación y quiescence");
-      int index = 0;
-      int numMoves = movesList.size();
-      for(Movement m : movesList)
-      {
-         System.out.print(Notation.toString(m));
-         if(++index < numMoves)
-            System.out.print(", ");
-      }
-      System.out.println("");
-      
-      List<Movement> movesForDelete = new ArrayList<Movement>();
-      for(Movement move: movesList)
-      {
-         //
-         if(move.getDestinationPiece() != null)
-         {
-            //Si es una captura se calcula su valor see
-            move.setValue(BitboardSee.getValue((BitboardPosition)position, 
-                                                move.getSource(), 
-                                                move.getDestination(), 
-                                                move.getDestinationPiece().genericPiece));
-         }
-         else
-         {
-            //Si no es una captura se elimina de la lista
-            movesForDelete.add(move);
-         }
-        
-      }
-      movesList.removeAll(movesForDelete);
-      
-      Collections.sort(movesList, new MoveValueComparator());
-      
-      index = 0;
-      System.out.println("Movimientos después de la ordenación y quiescence");
-      for(Movement m : movesList)
-      {
-         System.out.print(Notation.toString(m));
-         System.out.print(":" + m.getValue());
-         if(++index < numMoves)
-            System.out.print(", ");
-      }
-      System.out.println("");
-      
-   }
 }

@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.notation.Notation;
 
 
@@ -30,6 +32,8 @@ import es.dagaren.gladiator.notation.Notation;
  *
  */
 public class BitboardPosition extends AbstractPosition {
+   
+   private Logger logger = Logger.getLogger(BitboardPosition.class);
    
    public long tiempoRecuperarPeones = 0;
    public long tgiempoRecuperarMovements = 0;
@@ -2732,9 +2736,7 @@ public class BitboardPosition extends AbstractPosition {
       }
       else
       {
-         System.err.println("Poniendo " + piece.name() + " en casilla " + square.name());
-         System.err.println(this.toString());
-         System.err.println("ERROR: intentando poner pieza en casilla no vacia");
+         logger.error("Poniendo " + piece.name() + " en la casilla " + square.name() + " que no está vacía");
          System.exit(0);
       }
    }

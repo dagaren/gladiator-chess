@@ -16,6 +16,8 @@
  */
 package es.dagaren.gladiator.time;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.representation.Colour;
 
 /**
@@ -24,6 +26,8 @@ import es.dagaren.gladiator.representation.Colour;
  */
 public class Quota implements TimeControl
 {
+   private Logger logger = Logger.getLogger(Quota.class);
+   
    private long numMoves  = 0;
    private long time      = 0;
    private long increment = 0;
@@ -36,7 +40,7 @@ public class Quota implements TimeControl
       this.increment     = increment;
       this.incrementType = incrementType;
       
-      System.err.println("Creando quota, movimientos:" + this.numMoves +
+      logger.debug("Creando quota, movimientos:" + this.numMoves +
                                         ", tiempo: " + this.time +
                                         ", incremento: " + this.increment +
                                         ", tipo: " + this.incrementType.name());

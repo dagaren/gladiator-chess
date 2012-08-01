@@ -19,6 +19,8 @@ package es.dagaren.gladiator.communication.xboard;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.engine.Engine;
 import es.dagaren.gladiator.engine.EngineObserver;
 import es.dagaren.gladiator.notation.Notation;
@@ -37,6 +39,7 @@ import es.dagaren.gladiator.time.TimeControl;
  */
 public class EngineAdapter implements UserToEngine, EngineObserver
 {
+   private Logger logger = Logger.getLogger(EngineAdapter.class);
 
    private Engine engine;
    private EngineController engineController;
@@ -143,7 +146,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void analyze()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: analyze");
+      logger.info("Comando no implementado: analyze");
    }
 
    /* (non-Javadoc)
@@ -153,7 +156,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void bk()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: bk");
+      logger.info("Comando no implementado: bk");
    }
    
    /* (non-Javadoc)
@@ -181,7 +184,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void computer()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: computer");
+      logger.info("Comando no implementado: computer");
    }
    
    @Override
@@ -212,7 +215,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void draw()
    {
       //TODO Implementar
-      System.err.println("Comando no implementado: draw");
+      logger.info("Comando no implementado: draw");
    }
 
    /* (non-Javadoc)
@@ -222,7 +225,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void easy()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: easy");
+      logger.info("Comando no implementado: easy");
    }
    
    /* (non-Javadoc)
@@ -232,7 +235,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void hard()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: hard");
+      logger.info("Comando no implementado: hard");
    }
 
    /* (non-Javadoc)
@@ -242,7 +245,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void edit()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: edit");
+      logger.info("Comando no implementado: edit");
    }
 
    /* (non-Javadoc)
@@ -300,7 +303,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void hint()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: hint");
+      logger.info("Comando no implementado: hint");
    }
 
    /* (non-Javadoc)
@@ -310,7 +313,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void holding(String white, String black, String colour, String piece)
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: holding");
+      logger.info("Comando no implementado: holding");
    }
 
 
@@ -376,7 +379,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void partner(String player)
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: partner");
+      logger.info("Comando no implementado: partner");
    }
 
    /* (non-Javadoc)
@@ -415,7 +418,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void random()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: random");
+      logger.info("Comando no implementado: random");
    }
 
    /* (non-Javadoc)
@@ -440,7 +443,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void remove()
    {
       // TODO Implementar
-      System.err.println("Comando no implementado: remove");
+      logger.info("Comando no implementado: remove");
    }
 
    /* (non-Javadoc)
@@ -450,7 +453,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void result(String result, String comment)
    {
       //Se ignora el comando
-      System.err.println("[EngineAdpater]: Se recibe comando result: " + result + comment);
+      logger.info("[EngineAdpater]: Se recibe comando result: " + result + comment);
    }
 
    public synchronized void setboard(String fen)
@@ -486,7 +489,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       }
       catch(Exception ex)
       {
-         System.err.println("[EngineAdapter.sd]: Imposible convertir cadena a entero: " + depth);
+         logger.error("[sd]: Imposible convertir cadena a entero: " + depth);
       }
    }
 
@@ -537,7 +540,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       }
       catch(Exception ex)
       {
-         System.err.println("[EngineAdapter.level]: " + ex.getMessage());
+         logger.error("[level]: " + ex.getMessage());
       }
    }
 
@@ -565,7 +568,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       }
       catch(Exception ex)
       {
-         System.err.println("[EngineAdapter.time]: Imposible convertir cadena a entero: " + t);
+         logger.error("[time]: Imposible convertir cadena a entero: " + t);
       }
    }
    
@@ -592,7 +595,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       }
       catch(Exception ex)
       {
-         System.err.println("[EngineAdapter.otime]: Imposible convertir cadena a entero: " + t);
+         logger.error("[otime]: Imposible convertir cadena a entero: " + t);
       }
    }
 
@@ -603,7 +606,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    public synchronized void undo()
    {
       // TODO Implementar
-      System.err.println("[EngineAdapter.undo]: Comando no implementado");
+      logger.info("[EngineAdapter.undo]: Comando no implementado");
    }
 
    /* (non-Javadoc)

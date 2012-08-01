@@ -41,7 +41,5 @@ public class ExtendedPositionDescriptionTest
    {
       String epdString = "1r2r1k1/5pp1/R2p3n/3P1P1p/2p2PP1/1qb2B1P/Q7/2BR1K2 b - - bm Bd2; id \"STS(v7.0) Simplification.009\"; c0 \"Bd2=10, Bb2=5, Bb4=5, hxg4=3\";";
       ExtendedPositionDescription epd =  ExtendedPositionDescription.load(epdString);
-      
-      System.out.println(epd.toString());
    }
 }

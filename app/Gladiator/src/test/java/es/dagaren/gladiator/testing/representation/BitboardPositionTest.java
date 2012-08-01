@@ -17,6 +17,8 @@
 package es.dagaren.gladiator.testing.representation;
 
 import static org.junit.Assert.*;
+
+import org.apache.log4j.Logger;
 import org.junit.*;
 
 import java.util.List;
@@ -33,6 +35,8 @@ import es.dagaren.gladiator.representation.Square;
  */
 public class BitboardPositionTest
 {
+   private Logger logger = Logger.getLogger(BitboardPositionTest.class);
+   
    @BeforeClass
    public static void init()
    {
@@ -48,8 +52,8 @@ public class BitboardPositionTest
       
       String fen = position.toFen();
       
-      System.out.println("FEN original:   " + originalFen);
-      System.out.println("FEN recuperado: " + fen);
+      logger.debug("FEN original:   " + originalFen);
+      logger.debug("FEN recuperado: " + fen);
       
       assertEquals("La posición original y la calculada no coinciden", originalFen, fen);
       
@@ -65,8 +69,8 @@ public class BitboardPositionTest
       
       String fen = position.toFen();
       
-      System.out.println("FEN original:   " + originalFen);
-      System.out.println("FEN recuperado: " + fen);
+      logger.debug("FEN original:   " + originalFen);
+      logger.debug("FEN recuperado: " + fen);
       
       assertEquals("La posición original y la calculada no coinciden", originalFen, fen);
       

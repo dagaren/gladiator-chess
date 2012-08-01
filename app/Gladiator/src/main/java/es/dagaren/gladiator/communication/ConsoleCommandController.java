@@ -18,12 +18,16 @@ package es.dagaren.gladiator.communication;
 
 import java.util.Scanner;
 
+import org.apache.log4j.Logger;
+
 /**
  * @author dagaren
  *
  */
 public class ConsoleCommandController extends CommandController implements Runnable
 {
+   private Logger logger = Logger.getLogger(ConsoleCommandController.class);
+   
    boolean stopped = true;
    
    Thread t;
@@ -31,12 +35,16 @@ public class ConsoleCommandController extends CommandController implements Runna
    @Override
    public void sendCommand(String command) 
    {
+      logger.debug("Comando enviado > " + command);
+      
       System.out.println(command);
    }
    
    @Override
    public void recieveCommand(String command) 
    {
+      logger.debug("Comando recibido < " + command);
+      
       for(CommandReceiver receiver : receivers)
       {
          receiver.onCommandReceived(command);
