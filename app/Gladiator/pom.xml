@@ -7,6 +7,16 @@
 	<name>Gladiator</name>
 	<description>Gladiator chess engine</description>
 	<build>
+	
+	  <resources>
+	    <resource>
+	      <directory>src/main/resources</directory>
+	      <excludes>
+	        <exclude>log4j.properties</exclude>
+	      </excludes>
+	    </resource>
+	  </resources>
+	
 		<plugins>
 
 			<plugin>
@@ -25,33 +35,89 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
 							<mainClass>es.dagaren.gladiator.main.Main</mainClass>
 						</manifest>
+						<manifestEntries>
+						  <Class-Path>./</Class-Path>
+						  <Built-By>David Garcinuño Enríquez</Built-By>
+						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
 			
 			<plugin>
-	      <artifactId>maven-assembly-plugin</artifactId>
-	      <configuration>
-	        <descriptorRefs>
-	          <descriptorRef>jar-with-dependencies</descriptorRef>
-	        </descriptorRefs>
-	        <archive>
-	          <manifest>
-	            <mainClass>es.dagaren.gladiator.main.Main</mainClass>
-	          </manifest>
-	        </archive>
-	      </configuration>
-	      <executions>
-	        <execution>
-	          <phase>package</phase>
-	          <goals>
-	            <goal>single</goal>
-	          </goals>
-	        </execution>
-	      </executions>
-	    </plugin>
+			  <artifactId>maven-resources-plugin</artifactId>
+			  <version>2.5</version>
+			  <executions>
+			    <execution>
+			      <id>copy-resources</id>
+			      <phase>validate</phase>
+			      <goals>
+			        <goal>copy-resources</goal>
+			      </goals>
+			      <configuration>
+			        <outputDirectory>${basedir}/target</outputDirectory>
+			        <resources>
+			          <resource>
+			            <directory>src/main/resources</directory>
+			            <includes>
+			              <include>log4j.properties</include>
+			            </includes>
+			          </resource>
+			        </resources>
+			      </configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+			  <artifactId>maven-dependency-plugin</artifactId>
+			  <executions>
+			    <execution>
+			      <phase>package</phase>
+			      <goals>
+			        <goal>copy-dependencies</goal>
+			      </goals>
+			      <configuration>
+			        <outputDirectory>${project.build.directory}/lib</outputDirectory>
+			      </configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			 <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <id>copy-release</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                
+                <echo message="Release generado: ${project.build.finalName}"/>
+              
+                <copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}"
+                      todir="${project.basedir}/../../releases/"
+                      overwrite="true" />
+                <copy file="${project.build.directory}/log4j.properties"
+                      todir="${project.basedir}/../../releases/"
+                      overwrite="true" />
+                <copy todir="${project.basedir}/../../releases/lib/" overwrite="true">
+                  <fileset dir="${project.build.directory}/lib/" />
+                </copy>
+              
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+			
 		</plugins>
 	</build>
 
