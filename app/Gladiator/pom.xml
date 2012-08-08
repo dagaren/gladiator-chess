@@ -6,6 +6,11 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Gladiator</name>
 	<description>Gladiator chess engine</description>
+	
+	<properties>
+	  <release.dir>${project.basedir}/../../releases/</release.dir>
+	</properties>
+	
 	<build>
 	
 	  <resources>
@@ -100,14 +105,24 @@
                 <echo message="Release generado: ${project.build.finalName}"/>
               
                 <copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}"
-                      todir="${project.basedir}/../../releases/"
+                      todir="${release.dir}"
                       overwrite="true" />
                 <copy file="${project.build.directory}/log4j.properties"
-                      todir="${project.basedir}/../../releases/"
+                      todir="${release.dir}"
                       overwrite="true" />
-                <copy todir="${project.basedir}/../../releases/lib/" overwrite="true">
+                <copy todir="${release.dir}/lib/" overwrite="true">
                   <fileset dir="${project.build.directory}/lib/" />
                 </copy>
+                
+                <echo append="false" file="${release.dir}/gladiator.sh">#!/bin/bash${line.separator}</echo>
+                <echo append="true" file="${release.dir}/gladiator.sh">${line.separator}</echo>
+                <echo append="true" file="${release.dir}/gladiator.sh">SCRIPTS_DIR=$(dirname $0)${line.separator}</echo>
+                <echo append="true" file="${release.dir}/gladiator.sh">GLADIATOR_JAR=$SCRIPTS_DIR/${project.build.finalName}.${project.packaging}${line.separator}</echo>
+                <echo append="true" file="${release.dir}/gladiator.sh">java -Xmx2048M -jar "$GLADIATOR_JAR"${line.separator}</echo>
+                
+                
+                
+                <echo file="${release.dir}/gladiator.bat">java -Xmx2048M -jar "%~dp0${project.build.finalName}.${project.packaging}"</echo> 
               
               </target>
             </configuration>
