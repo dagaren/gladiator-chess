@@ -120,10 +120,10 @@
                 <echo append="true" file="${release.dir}/gladiator.sh">GLADIATOR_JAR=$SCRIPTS_DIR/${project.build.finalName}.${project.packaging}${line.separator}</echo>
                 <echo append="true" file="${release.dir}/gladiator.sh">java -Xmx2048M -jar "$GLADIATOR_JAR"${line.separator}</echo>
                 
-                
-                
                 <echo file="${release.dir}/gladiator.bat">java -Xmx2048M -jar "%~dp0${project.build.finalName}.${project.packaging}"</echo> 
               
+                <chmod file="${release.dir}/gladiator.sh" perm="ugo+x" /> 
+
               </target>
             </configuration>
             <goals>
