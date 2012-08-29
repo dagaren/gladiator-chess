@@ -40,7 +40,7 @@ public class Evaluator
    
    public static final int[] pawnPieceSquare = {  
          0,   0,   0,   0,   0,   0,   0,   0,
-         5,  10,  10, -20, -20,  10,  10,  10,
+         10,  10,  10, -20, -20,  10,  10,  10,
          5,  -5, -10,   0,   0, -10,  -5,   5,
          0,   0,   0,  20,  20,   0,   0,   0,
          5,   5,  10,  25,  25,  10,   5,   5,
@@ -84,9 +84,9 @@ public class Evaluator
    
    public static final int[] queenPieceSquare = {  
        -20, -10, -10,  -5,  -5, -10, -10, -20,
-       -10,   0,   5,   0,   0,   0,   0, -10,
-       -10,   5,   5,   5,   5,   5,   0, -10,
-         0,   0,   5,   5,   5,   5,   0,  -5,
+       -10,   0,   0,   0,   0,   0,   0, -10,
+       -10,   5,   5,   5,   5,   5,   5, -10,
+        -5,   0,   5,   5,   5,   5,   0,  -5,
         -5,   0,   5,   5,   5,   5,   0,  -5,
        -10,   0,   5,   5,   5,   5,   0, -10,
        -10,   0,   0,   0,   0,   0,   0, -10,
@@ -94,20 +94,21 @@ public class Evaluator
                                           };
    
    public static final int[] kingPieceSquare = {  
-         -30, -40, -40, -50, -50, -40, -40, -30,
-         -30, -40, -40, -50, -50, -40, -40, -30,
-         -30, -40, -40, -50, -50, -40, -40, -30,
-         -30, -40, -40, -50, -50, -40, -40, -30,
-         -20, -30, -30, -40, -40, -30, -30, -20,
+          20,  30,  10,   0,   0,  10,  30,  20,
+          20,  20,   0,   0,   0,   0,  20,  20,
          -10, -20, -20, -20, -20, -20, -20, -10,
-          20,  20,   0,   0,   0,   0,  10,  20,
-          20,  30,  10,   0,   0,  10,  30,  20
+         -20, -30, -30, -40, -40, -30, -30, -20,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         -30, -40, -40, -50, -50, -40, -40, -30,
+         
                                             };
    
    public static final int[] endKingPieceSquare = {  
          -50, -30, -30, -30, -30, -30, -30, -50,
          -30, -30,   0,   0,   0,   0, -30, -30,
-         -30, -10, -20,  30,  30,  20, -10, -30,
+         -30, -10,  20,  30,  30,  20, -10, -30,
          -30, -10,  30,  40,  40,  30, -10, -30,
          -30, -10,  30,  40,  40,  30, -10, -30,
          -30, -10,  20,  30,  30,  20, -10, -30,
@@ -162,13 +163,11 @@ public class Evaluator
    
    private int evaluateMobility(Position position)
    {
-      int score = 0;
+      int whiteMobility = position.getMobility(Colour.WHITE);
+   
+      int blackMobility = position.getMobility(Colour.BLACK);
       
-      score += position.getMobility(Colour.WHITE);
-      
-      score -= position.getMobility(Colour.BLACK);
-      
-      return score;
+      return (whiteMobility == 0 && blackMobility == 0) ? 0 : ((whiteMobility - blackMobility) / (whiteMobility + blackMobility) * 100) ;
    }
    
    private int evaluatePieceSquareTables(Position position)
