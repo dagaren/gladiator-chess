@@ -49,6 +49,9 @@ public class Searcher implements Runnable
 
    // La variante principal
    protected Movement[]       bestPrincipalVariation;
+   
+   //Puntaje de la variante principal
+   protected int              bestScore;
 
    // El hilo dedicado a las búsquedas
    protected Thread           thread;
@@ -77,11 +80,13 @@ public class Searcher implements Runnable
 
    public Searcher()
    {
-      depthLimit = 5;
+      depthLimit = 100;
       timeLimit = -1;
       nodesLimit = -1;
 
       bestPrincipalVariation = new Movement[0];
+      
+      bestScore = 0;
       
       movesLists = new ArrayList<List<Movement>>(32);
 
@@ -143,6 +148,7 @@ public class Searcher implements Runnable
 
             // Se limpia la variante principal
             bestPrincipalVariation = new Movement[0];
+            bestScore              = 0;
 
             // Se resetea los nodos recorridos
             visitedNodes = 0;
@@ -221,6 +227,11 @@ public class Searcher implements Runnable
    public Movement[] getPrincipalVariation()
    {
       return bestPrincipalVariation;
+   }
+   
+   public int getScore()
+   {
+      return bestScore;
    }
 
    public Position getPosition()

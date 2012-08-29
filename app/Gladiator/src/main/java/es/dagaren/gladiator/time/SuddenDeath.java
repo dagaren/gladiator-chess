@@ -58,7 +58,7 @@ public class SuddenDeath implements TimeControl
          
       if(incrementType == IncrementTypes.FISCHER)
       {
-         times[turn.index] += increment;
+         times[turn.index] += increment * 1000;
       }
    }
    
@@ -72,9 +72,9 @@ public class SuddenDeath implements TimeControl
       {
          long timespan = initTimes[turn.index] - times[turn.index];
          if(timespan >= increment)
-            times[turn.index] += increment;
+            times[turn.index] += increment * 1000;
          else
-            times[turn.index] += timespan;
+            times[turn.index] += timespan * 1000;
       }
    }
 
@@ -83,5 +83,14 @@ public class SuddenDeath implements TimeControl
    public long getStartTime(Colour turn)
    {
       return time;
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.time.TimeControl#getNumMoves()
+    */
+   @Override
+   public int getNumMoves()
+   {
+      return 0;
    }
 }

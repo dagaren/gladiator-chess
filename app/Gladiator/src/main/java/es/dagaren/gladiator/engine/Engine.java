@@ -18,6 +18,8 @@ package es.dagaren.gladiator.engine;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
@@ -53,6 +55,7 @@ public class Engine implements SearcherObserver
    
    protected TimeControl timeControl;
    protected Clock       clock;
+   protected Timer       searchTimer;
    
    private boolean publishSearchInfo = false;
    
@@ -61,8 +64,13 @@ public class Engine implements SearcherObserver
 
    protected EngineObserver observer;
 
-   protected final int defaultDepthLimit = 5;
-   protected int       depthLimit = defaultDepthLimit;
+   protected final int defaultDepthLimit = 14;
+   protected int       depthLimit        = defaultDepthLimit;
+   
+   protected long    remainingTime = 0;
+   protected long    timePerMove   = 0;
+   
+   protected int     numMoves = 0;
 
    protected boolean debug;
    
@@ -74,7 +82,7 @@ public class Engine implements SearcherObserver
       position = new BitboardPosition();
       position.setInitialPosition();
       
-      clock = new Clock();
+      //clock = new Clock();
       
       ownTurn = Colour.BLACK;
    }
@@ -106,7 +114,7 @@ public class Engine implements SearcherObserver
    }
 
    public void setTimeControl(TimeControl timeControl)
-   {
+   {  
       this.timeControl = timeControl;
    }
    
@@ -143,11 +151,16 @@ public class Engine implements SearcherObserver
       position = new BitboardPosition();
       position.setInitialPosition();
       
+      numMoves = 0;
+      
+      
+      //clock = new Clock();
+      
       //Se inicia el reloj
       //if(timeControl != null)
-      //{
-      //  clock.setTimeControl(timeControl);
-      //  clock.init();
+      //{  
+      //   clock.setTimeControl(timeControl);
+      //   clock.init();
       //}
       
       think();
@@ -216,6 +229,8 @@ public class Engine implements SearcherObserver
       //Se hace el movimiento en la posición
       position.doMove(move);
       
+      numMoves++;
+      
       //Se pulsa el reloj
       //clock.switchClocks();
       
@@ -256,6 +271,8 @@ public class Engine implements SearcherObserver
    {
       if(position.getTurn() == ownTurn)
       {
+         this.initMoveTimer();
+         
          searcher.initSearch(position);
       }
       
@@ -270,6 +287,61 @@ public class Engine implements SearcherObserver
       Movement m = legalMoves.get(legalMoves.indexOf(move));
       
       return m;
+   }
+   
+   protected void initMoveTimer()
+   {
+      logger.debug("Iniciando temporizador"); 
+            
+      //Tiempo que se va a asignar a la búsqueda (en milisengundos)
+      long searchTime = 10000;
+      
+      //Se calcula el tiempo a gastar en el siguiente movimiento
+      if(this.timeControl != null)
+      {
+         int move = numMoves / 2;
+               
+         int timeControlMoves = this.timeControl.getNumMoves();
+         int remainingMoves   = timeControlMoves > 0 ? (timeControlMoves - (move % timeControlMoves)) : 20;
+         
+         searchTime = remainingTime / remainingMoves;
+         
+         logger.debug("Control de tiempo. Movimientos hasta el siguiente control: " 
+               + remainingMoves 
+               + ", Tiempo restante: "  
+               + (remainingTime / 1000.0) + " segundos"
+               + ", Tiempo asignado: " 
+               + (searchTime / 1000.0) + " segundos");
+         
+      }
+      else
+      {
+         if(this.timePerMove > 0)
+         {
+            searchTime = this.timePerMove;
+         }
+      }
+      
+      searchTime -= 300;
+      
+      logger.debug("Tiempo asignado para el siguiente movimiento: " + searchTime / 1000.0 + " segundos");
+      
+      //Se inicializa un timer para que finalize la búsqueda
+      //cuando el tiempo calculado se acabe
+      searchTimer = new Timer();
+      
+      searchTimer.schedule(new TimerTask() {
+
+         @Override
+         public void run()
+         {
+            logger.debug("Timeout del tiempo. Se procede a parar el proceso de búsqueda");
+            
+            searcher.stop();
+         }
+         
+      }, searchTime);
+      
    }
 
    
@@ -295,9 +367,6 @@ public class Engine implements SearcherObserver
    public void onSearchFinished(Searcher searcher)
    {
       Movement[] pv = searcher.getPrincipalVariation();
-      
-      boolean isCheckmate = false;
-      boolean isStalemate = false;
       
       if(pv != null && pv.length > 0)
       {
@@ -352,5 +421,25 @@ public class Engine implements SearcherObserver
    public String getRating()
    {
       return rating;
+   }
+
+   public long getRemainingTime()
+   {
+      return remainingTime;
+   }
+
+   public void setRemainingTime(long remainingTime)
+   {
+      this.remainingTime = remainingTime;
+   }
+
+   public long getTimePerMove()
+   {
+      return timePerMove;
+   }
+
+   public void setTimePerMove(long timePerMove)
+   {
+      this.timePerMove = timePerMove;
    }
 }

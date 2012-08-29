@@ -28,12 +28,12 @@ public class Quota implements TimeControl
 {
    private Logger logger = Logger.getLogger(Quota.class);
    
-   private long numMoves  = 0;
+   private int  numMoves  = 0;
    private long time      = 0;
    private long increment = 0;
    private IncrementTypes incrementType = null;
    
-   public Quota(long moves, long time, long increment, IncrementTypes incrementType)
+   public Quota(int moves, long time, long increment, IncrementTypes incrementType)
    {
       this.numMoves      = moves;
       this.time          = time;
@@ -58,7 +58,7 @@ public class Quota implements TimeControl
          times[Colour.BLACK.index] = time * 1000;
       }
       
-      if(numMove > 1 && (numMove % numMoves) == 1)
+      if(numMove > 1 && (numMove % this.numMoves) == 1)
       {
          times[turn.index] += time;
       }
@@ -82,7 +82,7 @@ public class Quota implements TimeControl
          if(timespan >= increment)
             times[turn.index] += increment * 1000;
          else
-            times[turn.index] += timespan;
+            times[turn.index] += timespan * 1000;
       }
    }
    
@@ -90,6 +90,15 @@ public class Quota implements TimeControl
    public long getStartTime(Colour turn)
    {
       return time;
+   }
+
+   /* (non-Javadoc)
+    * @see es.dagaren.gladiator.time.TimeControl#getNumMoves()
+    */
+   @Override
+   public int getNumMoves()
+   {
+      return this.numMoves;
    }
 
 }

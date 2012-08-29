@@ -139,12 +139,15 @@ public class AlphaBetaSearcher extends Searcher
       futilityPrunings = 0;
       
       bestPrincipalVariation = new Movement[0];
+      bestScore              = 0;
       
       int score = 0;
       
       //Se implementa la profundidad iterativa
       for(depth = 1; depth <= depthLimit; depth++)
       {
+         logger.info("Comenzando búsqueda para profundidad " + depth);
+         
          long iterationInitTime = System.currentTimeMillis();
          
          iterationNodes = 0;
@@ -203,6 +206,17 @@ public class AlphaBetaSearcher extends Searcher
          }
          
          bestPrincipalVariation = principalVariation.getPrincipalVariation();
+         bestScore              = score;
+         
+         String pv = "";
+         for(Movement m : bestPrincipalVariation)
+         {
+            pv += " ";
+            pv += Notation.toString(m);
+         }
+         logger.info("Variante principal en la profundidad " + depth + ": " + pv);
+         logger.info("Mejor puntuación en la profundidad " + depth + ": " + bestScore);
+         
          
          int nodesPercent = (nodes + qnodes) > 0 ? ((100 * nodes) / (nodes + qnodes)) : 0;
          int qnodesPercent = (nodes + qnodes) > 0 ? ((100 * qnodes) / (nodes + qnodes)) : 0;

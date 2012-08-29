@@ -16,6 +16,8 @@
  */
 package es.dagaren.gladiator.time;
 
+import org.apache.log4j.Logger;
+
 import es.dagaren.gladiator.representation.Colour;
 
 /**
@@ -24,12 +26,14 @@ import es.dagaren.gladiator.representation.Colour;
  */
 public class Clock
 {
-   private TimeControl timeControl = null
-   ;
+   private Logger logger = Logger.getLogger(Clock.class);
+   
+   private TimeControl timeControl = null;
+   
    private Stopwatch whiteStopwatch = new Stopwatch();
    private Stopwatch blackStopwatch = new Stopwatch();
    
-   private int initialMove    = 1;
+   private int    initialMove = 1;
    private Colour initialTurn = Colour.WHITE;
    
    private int move    = initialMove;
@@ -42,6 +46,8 @@ public class Clock
    
    public synchronized void setTimeControl(TimeControl timeControl)
    {
+      logger.debug("Cambiando control de tiempo");
+      
       this.timeControl = timeControl; 
      
       if(this.state == States.STOPPED)
@@ -52,6 +58,8 @@ public class Clock
    
    public synchronized void setWhiteTime(long whiteTime)
    {
+      logger.debug("Cambiando el tiempo de blancas a " + whiteTime);
+      
       this.whiteStopwatch.setTime(whiteTime);
    }
    
@@ -62,6 +70,8 @@ public class Clock
    
    public synchronized void setBlackTime(long blackTime)
    {
+      logger.debug("Cambiando el tiempo de las negras a " + blackTime);
+      
       this.blackStopwatch.setTime(blackTime);
    }
    
@@ -105,6 +115,9 @@ public class Clock
       
       whiteStopwatch.setTime(times[Colour.WHITE.index]);
       blackStopwatch.setTime(times[Colour.BLACK.index]);
+      
+      logger.debug("Iniciando turno. Tiempo de blancas: " + whiteStopwatch.getTime() +
+            ", Tiempo de negras: " + blackStopwatch.getTime());
       
       if(turn == Colour.WHITE)
       {
@@ -163,11 +176,15 @@ public class Clock
    
    public synchronized void init()
    {
+      logger.debug("Inicializando reloj");
+      
       reset();
    }
    
    public synchronized void start()
    {
+      logger.debug("Poniendo en marcha reloj");
+      
       if(state == States.STOPPED)
       {
          state = States.RUNNING;
@@ -179,6 +196,8 @@ public class Clock
    
    public synchronized void pause()
    {
+      logger.debug("Pausando reloj");
+      
       if(state == States.RUNNING)
       {
          state = States.PAUSED;
@@ -190,6 +209,8 @@ public class Clock
    
    public synchronized void resume()
    {
+      logger.debug("Reanudando reloj");
+      
       if(state == States.PAUSED)
       {
          state = States.RUNNING;
@@ -204,11 +225,14 @@ public class Clock
    
    public synchronized void switchClocks()
    {
+      
       if(state == States.RUNNING || state == States.STOPPED)
       {
          this.endTurn();
          
          turn = turn.opposite();
+         
+         logger.debug("Pulsando reloj, iniciando el turno de " + turn.toString());
          
          if(turn == Colour.WHITE)
             move++;

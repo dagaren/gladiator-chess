@@ -499,8 +499,15 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void st(String secondsString)
    {
-      //TODO implementar
-      engineController.error("command not implemented", "st");
+      try
+      {
+         long timePerMove = Long.parseLong(secondsString);
+         engine.setTimePerMove(timePerMove);
+      }
+      catch(Exception ex)
+      {
+         logger.error("[st]: Imposible convertir cadena a entero: " + secondsString);
+      }
    }
    
    /* (non-Javadoc)
@@ -555,16 +562,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
          int cseconds = Integer.parseInt(t);
          int mseconds = cseconds * 10;
          
-         Colour engineTurn = engine.getOwnTurn();
-         if(engineTurn == Colour.WHITE)
-         {
-            engine.getClock().setWhiteTime(mseconds);
-         }
-         else
-         {
-            engine.getClock().setBlackTime(mseconds);
-         }
- 
+         engine.setRemainingTime(mseconds);
       }
       catch(Exception ex)
       {
@@ -578,6 +576,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
    @Override
    public synchronized void otim(String t)
    {
+      /*
       try
       {
          int cseconds = Integer.parseInt(t);
@@ -596,7 +595,7 @@ public class EngineAdapter implements UserToEngine, EngineObserver
       catch(Exception ex)
       {
          logger.error("[otime]: Imposible convertir cadena a entero: " + t);
-      }
+      }*/
    }
 
    /* (non-Javadoc)

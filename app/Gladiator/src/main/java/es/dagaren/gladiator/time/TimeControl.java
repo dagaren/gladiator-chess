@@ -24,6 +24,9 @@ import es.dagaren.gladiator.representation.Colour;
  */
 public interface TimeControl
 {
+   
+   public int getNumMoves();
+   
    public void startTurn(long[] times, int numMove, Colour turn);
    public void finishTurn(long[] initTimes,long[] times, int numMove, Colour turn); 
    public long getStartTime(Colour turn);
