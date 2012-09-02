@@ -8,7 +8,7 @@
 	<description>Gladiator chess engine</description>
 	
 	<properties>
-	  <release.dir>${project.basedir}/../../releases/</release.dir>
+	  <release.dir>${project.basedir}/releases/</release.dir>
 	</properties>
 	
 	<build>

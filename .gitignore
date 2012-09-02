@@ -1,4 +1,5 @@
-app/Gladiator/bin/*
-doc/*
+bin/*
 releases/*
 scripts/*
+build/*
+target/*
