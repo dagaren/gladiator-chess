@@ -101,6 +101,10 @@
             <phase>package</phase>
             <configuration>
               <target>
+
+                <delete includeemptydirs="true">
+                  <fileset dir="${release.dir}" includes="**/*" />
+                </delete>
                 
                 <echo message="Release generado: ${project.build.finalName}"/>
               
@@ -123,6 +127,8 @@
                 <echo file="${release.dir}/gladiator.bat">java -Xmx2048M -jar "%~dp0${project.build.finalName}.${project.packaging}"</echo> 
               
                 <chmod file="${release.dir}/gladiator.sh" perm="ugo+x" /> 
+
+                <zip basedir="${release.dir}" destfile="${release.dir}/${project.build.finalName}.zip" update="true"  />
 
               </target>
             </configuration>
