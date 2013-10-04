@@ -1,160 +1,162 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>es.dagaren.gladiator</groupId>
-	<artifactId>Gladiator</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Gladiator</name>
-	<description>Gladiator chess engine</description>
-	
-	<properties>
-	  <release.dir>${project.basedir}/releases/</release.dir>
-	</properties>
-	
-	<build>
-	
-	  <resources>
-	    <resource>
-	      <directory>src/main/resources</directory>
-	      <excludes>
-	        <exclude>log4j.properties</exclude>
-	      </excludes>
-	    </resource>
-	  </resources>
-	
-		<plugins>
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>es.dagaren.gladiator</groupId>
+   <artifactId>Gladiator</artifactId>
+   <version>0.0.1-SNAPSHOT</version>
+   <name>Gladiator</name>
+   <description>Gladiator chess engine</description>
+   
+   <properties>
+      <release.dir>${project.basedir}/releases/</release.dir>
+   </properties>
+   
+   <build>
+   
+      <resources>
+         <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+               <exclude>log4j.properties</exclude>
+            </excludes>
+         </resource>
+      </resources>
+   
+      <plugins>
 
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source />
-					<target />
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>es.dagaren.gladiator.main.Main</mainClass>
-						</manifest>
-						<manifestEntries>
-						  <Class-Path>./</Class-Path>
-						  <Built-By>David Garcinuño Enríquez</Built-By>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-			
-			<plugin>
-			  <artifactId>maven-resources-plugin</artifactId>
-			  <version>2.5</version>
-			  <executions>
-			    <execution>
-			      <id>copy-resources</id>
-			      <phase>validate</phase>
-			      <goals>
-			        <goal>copy-resources</goal>
-			      </goals>
-			      <configuration>
-			        <outputDirectory>${basedir}/target</outputDirectory>
-			        <resources>
-			          <resource>
-			            <directory>src/main/resources</directory>
-			            <includes>
-			              <include>log4j.properties</include>
-			            </includes>
-			          </resource>
-			        </resources>
-			      </configuration>
-			    </execution>
-			  </executions>
-			</plugin>
-			
-			<plugin>
-			  <artifactId>maven-dependency-plugin</artifactId>
-			  <executions>
-			    <execution>
-			      <phase>package</phase>
-			      <goals>
-			        <goal>copy-dependencies</goal>
-			      </goals>
-			      <configuration>
-			        <outputDirectory>${project.build.directory}/lib</outputDirectory>
-			      </configuration>
-			    </execution>
-			  </executions>
-			</plugin>
-			
-			 <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <id>copy-release</id>
-            <phase>package</phase>
+         <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.3.2</version>
             <configuration>
-              <target>
-
-                <delete includeemptydirs="true">
-                  <fileset dir="${release.dir}" includes="**/*" />
-                </delete>
-                
-                <echo message="Release generado: ${project.build.finalName}"/>
-              
-                <copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}"
-                      todir="${release.dir}"
-                      overwrite="true" />
-                <copy file="${project.build.directory}/log4j.properties"
-                      todir="${release.dir}"
-                      overwrite="true" />
-                <copy todir="${release.dir}/lib/" overwrite="true">
-                  <fileset dir="${project.build.directory}/lib/" />
-                </copy>
-                
-                <echo append="false" file="${release.dir}/gladiator.sh">#!/bin/bash${line.separator}</echo>
-                <echo append="true" file="${release.dir}/gladiator.sh">${line.separator}</echo>
-                <echo append="true" file="${release.dir}/gladiator.sh">SCRIPTS_DIR=$(dirname $0)${line.separator}</echo>
-                <echo append="true" file="${release.dir}/gladiator.sh">GLADIATOR_JAR=$SCRIPTS_DIR/${project.build.finalName}.${project.packaging}${line.separator}</echo>
-                <echo append="true" file="${release.dir}/gladiator.sh">java -Xmx2048M -jar "$GLADIATOR_JAR"${line.separator}</echo>
-                
-                <echo file="${release.dir}/gladiator.bat">java -Xmx2048M -jar "%~dp0${project.build.finalName}.${project.packaging}"</echo> 
-              
-                <chmod file="${release.dir}/gladiator.sh" perm="ugo+x" /> 
-
-                <zip basedir="${release.dir}" destfile="${release.dir}/${project.build.finalName}.zip" update="true"  />
-
-              </target>
+               <source />
+               <target />
             </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-			
-		</plugins>
-	</build>
+         </plugin>
 
-	<dependencies>
-	
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
-		
-	</dependencies>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+               <archive>
+                  <manifest>
+                     <addClasspath>true</addClasspath>
+                     <classpathPrefix>lib/</classpathPrefix>
+                     <mainClass>es.dagaren.gladiator.main.Main</mainClass>
+                  </manifest>
+                  <manifestEntries>
+                     <Class-Path>./</Class-Path>
+                     <Built-By>David Garcinuño Enríquez</Built-By>
+                  </manifestEntries>
+               </archive>
+            </configuration>
+         </plugin>
+         
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.5</version>
+            <executions>
+               <execution>
+                  <id>copy-resources</id>
+                  <phase>validate</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>${basedir}/target</outputDirectory>
+                     <resources>
+                        <resource>
+                           <directory>src/main/resources</directory>
+                           <includes>
+                              <include>log4j.properties</include>
+                           </includes>
+                        </resource>
+                     </resources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>copy-dependencies</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+               <execution>
+                  <id>copy-release</id>
+                  <phase>package</phase>
+                  <configuration>
+                     <target>
+
+                        <delete includeemptydirs="true">
+                           <fileset dir="${release.dir}" includes="**/*" />
+                        </delete>
+                
+                        <echo message="Release generado: ${project.build.finalName}"/>
+              
+                        <copy file="${project.build.directory}/${project.build.finalName}.${project.packaging}" todir="${release.dir}" overwrite="true" />
+                        <copy file="${project.build.directory}/log4j.properties" todir="${release.dir}" overwrite="true" />
+                        <copy todir="${release.dir}/lib/" overwrite="true">
+                           <fileset dir="${project.build.directory}/lib/" />
+                        </copy>
+                
+                        <echo append="false" file="${release.dir}/gladiator.sh">#!/bin/bash${line.separator}</echo>
+                        <echo append="true" file="${release.dir}/gladiator.sh">${line.separator}</echo>
+                        <echo append="true" file="${release.dir}/gladiator.sh">SCRIPTS_DIR=$(dirname $0)${line.separator}</echo>
+                        <echo append="true" file="${release.dir}/gladiator.sh">GLADIATOR_JAR=$SCRIPTS_DIR/${project.build.finalName}.${project.packaging}${line.separator}</echo>
+                        <echo append="true" file="${release.dir}/gladiator.sh">java -Xmx2048M -jar "$GLADIATOR_JAR"${line.separator}</echo>
+                
+                        <echo file="${release.dir}/gladiator.bat">java -Xmx2048M -jar "%~dp0${project.build.finalName}.${project.packaging}"</echo> 
+              
+                        <chmod file="${release.dir}/gladiator.sh" perm="ugo+x" /> 
+
+                        <zip basedir="${release.dir}" destfile="${release.dir}/${project.build.finalName}.zip" update="true"  />
+
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         
+      </plugins>
+   </build>
+
+   <dependencies>
+   
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>4.10</version>
+      </dependency>
+      
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+         <version>1.2.17</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+         <version>3.0</version>
+      </dependency>
+      
+   </dependencies>
 </project>
